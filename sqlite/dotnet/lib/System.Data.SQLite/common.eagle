@@ -665,6 +665,14 @@ namespace eval ::Eagle {
       }
     }
 
+    proc getSQLiteHtmlHelpPath {} {
+      #
+      # NOTE: Figure out the directory where all the HtmlHelp files should
+      #       be located.
+      #
+      return [file join [file dirname $::path] Externals HtmlHelp]
+    }
+
     proc getSQLiteTestDataPath {} {
       #
       # NOTE: Figure out the directory where all the test data files should
@@ -1052,22 +1060,22 @@ namespace eval ::Eagle {
         #       1. Build the separate managed and native assemblies using some
         #          commands similar to:
         #
-        #          build.bat ${Configuration}ManagedOnly ${Platform}
-        #          build.bat ${Configuration}NativeOnly ${Platform}
+        #          CALL build.bat ${Configuration}ManagedOnly ${Platform}
+        #          CALL build.bat ${Configuration}NativeOnly ${Platform}
         #
         #          Where ${Configuration} is either "Debug" or "Release" and
         #          ${Platform} is either "Win32" or "x64".
         #
         #       2. Build the mixed-mode assembly using a command similar to:
         #
-        #          build.bat ${Configuration} ${Platform}
+        #          CALL build.bat ${Configuration} ${Platform}
         #
         #          Where ${Configuration} is either "Debug" or "Release" and
         #          ${Platform} is either "Win32" or "x64".  If this command is
         #          used, various tests that require supplementary managed
         #          assemblies (e.g. LINQ) may be skipped unless those binaries
         #          are subsequently copied into the correct directory (i.e. by
-        #          "test_all.bat").
+        #          "CALL test_all.bat").
         #
         #       Note that all of the build commands above will default to using
         #       the latest version of MSBuild available and the "test_year" may
@@ -1818,7 +1826,7 @@ namespace eval ::Eagle {
       }
     }
 
-    proc tryCopyAssembly {
+    proc tryCopyBuildAssembly {
             fileName managedOnly {platform ""} {pdb true} {verbose true} } {
       tryCopyBuildFile $fileName $managedOnly $platform "" $verbose
 
@@ -1828,7 +1836,27 @@ namespace eval ::Eagle {
       }
     }
 
-    proc tryDeleteAssembly {
+    proc tryCopyBinaryAssembly {
+            fileName managedOnly {platform ""} {pdb true} {verbose true} } {
+      tryCopyBinaryFile $fileName $managedOnly $platform "" $verbose
+
+      if {$pdb} then {
+        tryCopyBinaryFile [appendArgs \
+            [file rootname $fileName] .pdb] $managedOnly $platform "" $verbose
+      }
+    }
+
+    proc tryDeleteBuildAssembly {
+            fileName managedOnly {platform ""} {pdb true} {verbose true} } {
+      tryDeleteBuildFile $fileName $managedOnly $platform $verbose
+
+      if {$pdb} then {
+        tryDeleteBuildFile [appendArgs \
+            [file rootname $fileName] .pdb] $managedOnly $platform $verbose
+      }
+    }
+
+    proc tryDeleteBinaryAssembly {
             fileName {platform ""} {pdb true} {verbose true} } {
       tryDeleteBinaryFile $fileName $platform $verbose
 
@@ -1838,28 +1866,32 @@ namespace eval ::Eagle {
       }
     }
 
-    proc tryLoadAssembly { fileName {platform ""} } {
+    proc tryLoadBinaryAssembly { fileName {platform ""} {initialize ""} } {
       set fileName [getBinaryFileName $fileName $platform]
 
       if {[catch {
         set assembly [object load -loadtype File -alias $fileName]
       }] == 0} then {
-        #
-        # NOTE: Now, add the necessary test constraint.
-        #
-        addConstraint [file rootname [file tail $fileName]]
+        if {[string length $initialize] == 0 || \
+            [catch $initialize] == 0} then {
+          #
+          # NOTE: Now, add the necessary test constraint.
+          #
+          addConstraint [file rootname [file tail $fileName]]
 
-        #
-        # NOTE: Grab the image runtime version from the assembly because
-        #       several tests rely on it having a certain value.
-        #
-        addConstraint [appendArgs [file tail $fileName] _ \
-            [$assembly ImageRuntimeVersion]]
+          #
+          # NOTE: Grab the image runtime version from the assembly
+          #       because several tests rely on it having a certain
+          #       value.
+          #
+          addConstraint [appendArgs [file tail $fileName] _ \
+              [$assembly ImageRuntimeVersion]]
 
-        #
-        # NOTE: Return the full path of the loaded file.
-        #
-        return $fileName
+          #
+          # NOTE: Return the full path of the loaded file.
+          #
+          return $fileName
+        }
       }
 
       return ""
@@ -1870,11 +1902,11 @@ namespace eval ::Eagle {
       # NOTE: This procedure must return non-zero only if the SQLite native
       #       library and the System.Data.SQLite managed assembly are loaded
       #       and ready for use by the test suite.  Currently, this procedure
-      #       should be called only after the [tryLoadAssembly] procedure has
-      #       been called to probe for the System.Data.SQLite managed assembly
-      #       and the [checkForSQLite] procedure has been called to probe for
-      #       the SQLite native library; otherwise, this procedure will simply
-      #       always return zero.
+      #       should be called only after a [tryLoadBinaryAssembly] procedure
+      #       has been called to probe for the System.Data.SQLite managed
+      #       assembly and the [checkForSQLite] procedure has been called to
+      #       probe for the SQLite native library; otherwise, this procedure
+      #       will simply always return zero.
       #
       return [expr {
         [haveConstraint System.Data.SQLite] && [haveConstraint SQLite]
@@ -1944,12 +1976,13 @@ namespace eval ::Eagle {
 
         if {![info exists ::no(shimSQLiteDefineConstantConstraints)]} then {
           set defineConstants [list \
-              INTEROP_EXTENSION_FUNCTIONS INTEROP_FTS5_EXTENSION \
-              INTEROP_JSON1_EXTENSION INTEROP_PERCENTILE_EXTENSION \
-              INTEROP_REGEXP_EXTENSION INTEROP_TEST_EXTENSION \
-              INTEROP_SESSION_EXTENSION INTEROP_SHA1_EXTENSION \
-              INTEROP_SHA3_EXTENSION INTEROP_TOTYPE_EXTENSION \
-              INTEROP_VIRTUAL_TABLE USE_INTEROP_DLL]
+              INTEROP_COMPRESS_EXTENSION INTEROP_EXTENSION_FUNCTIONS \
+              INTEROP_FTS5_EXTENSION INTEROP_JSON1_EXTENSION \
+              INTEROP_PERCENTILE_EXTENSION INTEROP_REGEXP_EXTENSION \
+              INTEROP_TEST_EXTENSION INTEROP_SESSION_EXTENSION \
+              INTEROP_SHA1_EXTENSION INTEROP_SHA3_EXTENSION \
+              INTEROP_TOTYPE_EXTENSION INTEROP_VIRTUAL_TABLE \
+              INTEROP_ZIPFILE_EXTENSION USE_INTEROP_DLL]
 
           foreach defineConstant $defineConstants {
             addConstraint [appendArgs \
@@ -2288,8 +2321,17 @@ namespace eval ::Eagle {
           "\"... "]
 
       if {[catch {
-        object invoke -flags +NonPublic \
-            System.Data.SQLite.SQLite3 DefineConstants
+        if {[string match INTEROP_* $name]} then {
+          #
+          # HACK: Use unified define constants list that takes into
+          #       account both the managed and interop assemblies.
+          #
+          object invoke -flags +NonPublic \
+              System.Data.SQLite.SQLite3 DefineConstants
+        } else {
+          object invoke -flags +NonPublic \
+              System.Data.SQLite.SQLite3 ProviderDefineConstants
+        }
       } defineConstants] == 0} then {
         if {[lsearch -exact -nocase $defineConstants $name] != -1} then {
           #
@@ -2355,7 +2397,7 @@ namespace eval ::Eagle {
       }
     }
 
-    proc getDateTimeFormat { {timeZone true} } {
+    proc getDateTimeFormat { {milliseconds false} {timeZone true} } {
       #
       # NOTE: This procedure simply returns the "default" DateTime format used
       #       by the test suite.
@@ -2373,8 +2415,19 @@ namespace eval ::Eagle {
         #       DateTime class of the framework.  If this value is changed,
         #       various tests may fail.
         #
-        return [appendArgs \
-            "yyyy-MM-dd HH:mm:ss.FFFFFFF" [expr {$timeZone ? "K" : ""}]]
+        set result "yyyy-MM-dd HH:mm:ss."
+
+        if {$milliseconds} then {
+          append result fffffff
+        } else {
+          append result FFFFFFF
+        }
+
+        if {$timeZone} then {
+          append result K
+        }
+
+        return $result
       }
     }
 
@@ -2403,6 +2456,34 @@ namespace eval ::Eagle {
         return [object invoke $dateTime ToLocalTime.Ticks]
       } else {
         return [object invoke $dateTime ToUniversalTime.Ticks]
+      }
+    }
+
+    proc getDateTimeBinary { value {local ""} {default ""} } {
+      if {[string length $value] == 0} then {
+        return $default
+      }
+
+      if {[catch {
+        set dateTime [object invoke -create \
+            -parametertypes [list String String IFormatProvider \
+            System.Globalization.DateTimeStyles] DateTime ParseExact \
+            $value [getDateTimeFormat] null AdjustToUniversal]
+      }]} then {
+        return $default
+      }
+
+      if {[string is boolean -strict $local]} then {
+        set dateTime [object invoke -create DateTime SpecifyKind \
+            $dateTime Utc]
+      } else {
+        return [object invoke $dateTime ToBinary]
+      }
+
+      if {$local} then {
+        return [object invoke $dateTime ToLocalTime.ToBinary]
+      } else {
+        return [object invoke $dateTime ToUniversalTime.ToBinary]
       }
     }
 
@@ -3133,6 +3214,34 @@ namespace eval ::Eagle {
       return ""
     }
 
+    proc getFlagsRegExp { wrap args } {
+      package require Eagle.Test.Constraints
+
+      set result ""
+
+      foreach arg [lpermute $args] {
+        if {[string length $result] > 0} then {
+          append result |
+        }
+
+        append result [join $arg ", "]
+      }
+
+      set length [llength $args]
+
+      if {$wrap} then {
+        set result [appendArgs ^ $result \$]
+      } else {
+        if {$length > 1} then {
+          set result [appendArgs \\\{(?: $result )\\\}]
+        } else {
+          set result [appendArgs (?: $result )]
+        }
+      }
+
+      return $result
+    }
+
     proc getExtraProperties { {extra ""} {quiet false} } {
       #
       # NOTE: Determine what the combined (global and local) connection
@@ -3353,7 +3462,8 @@ namespace eval ::Eagle {
       # NOTE: Add the name of the current test file, if available.  This is
       #       only used for debugging.
       #
-      if {[info exists ::test_file]} then {
+      if {[info exists ::test_file] && \
+          [string length $::test_file] > 0} then {
         append connection {;TestFile=${::test_file}}
       }
 
@@ -3361,7 +3471,8 @@ namespace eval ::Eagle {
       # NOTE: Add the name of the current test, if available.  This is only
       #       used for debugging.
       #
-      if {[info exists ::eagle_tests(CurrentName)]} then {
+      if {[info exists ::eagle_tests(CurrentName)] && \
+          [string length $::eagle_tests(CurrentName)] > 0} then {
         append connection {;TestName=${::eagle_tests(CurrentName)}}
       }
 
@@ -4339,8 +4450,8 @@ namespace eval ::Eagle {
         }
 
         #
-        # BUGFIX: Before calling the native shutdown function, make sure both
-        #         of the PRAGMA related directory names are freed.
+        # BUGFIX: Before calling the native shutdown function, make sure
+        #         both of the PRAGMA related directory names are freed.
         #
         checkForSQLiteDirectories $channel true
 
@@ -4402,6 +4513,58 @@ namespace eval ::Eagle {
       }
 
       return -1
+    }
+
+    proc getCreateCount {} {
+      if {[isDotNetCore]} then {
+        if {[catch {
+          #
+          # TODO: For reasons that are unclear, this next command will
+          #       sometimes fail when running on .NET Core 2.x.
+          #
+          object invoke -flags +NonPublic \
+              "System.Data.SQLite.SQLiteBase, System.Data.SQLite" \
+              _createCount
+        } result] == 0} then {
+          return $result
+        }
+      }
+
+      if {[catch {
+        object invoke -flags +NonPublic [appendArgs \
+            "System.Data.SQLite.SQLiteBase, " [lindex [object \
+            load System.Data.SQLite] 0]] _createCount
+      } result] == 0} then {
+        return $result
+      }
+
+      error "could not figure out how to obtain create count"
+    }
+
+    proc getDisposeCount {} {
+      if {[isDotNetCore]} then {
+        if {[catch {
+          #
+          # TODO: For reasons that are unclear, this next command will
+          #       sometimes fail when running on .NET Core 2.x.
+          #
+          object invoke -flags +NonPublic \
+              "System.Data.SQLite.SQLiteBase, System.Data.SQLite" \
+              _disposeCount
+        } result] == 0} then {
+          return $result
+        }
+      }
+
+      if {[catch {
+        object invoke -flags +NonPublic [appendArgs \
+            "System.Data.SQLite.SQLiteBase, " [lindex [object \
+            load System.Data.SQLite] 0]] _disposeCount
+      } result] == 0} then {
+        return $result
+      }
+
+      error "could not figure out how to obtain dispose count"
     }
 
     proc getOtherCount { name } {
@@ -4968,6 +5131,54 @@ namespace eval ::Eagle {
       }
     }
 
+    proc resetSQLiteLogSubsystem {
+            channel {shutdown false} {initialize true} } {
+      if {[catch {
+        object invoke -flags +NonPublic System.Data.SQLite.SQLiteLog \
+            Uninitialize [getTestSuite] $shutdown
+
+        if {$shutdown} then {
+          #
+          # HACK: Just in case the internal SQLite database handle in
+          #       the SQLiteLog class was unavailable, perform a clean
+          #       shutdown of the SQLite core library now.
+          #
+          shutdownSQLite $channel
+        }
+
+        object invoke -flags +NonPublic System.Data.SQLite.SQLiteLog \
+            _initializeDoneCount 0
+
+        object invoke -flags +NonPublic System.Data.SQLite.SQLiteLog \
+            _attemptedInitialize 0
+
+        if {$initialize} then {
+          object invoke -flags +NonPublic System.Data.SQLite.SQLiteLog \
+              Initialize [getTestSuite]
+        }
+      } error] == 0} then {
+        tputs $channel [appendArgs \
+            "---- success resetting internal SQLiteLog state to " \
+            [expr {$initialize ? "initialized" : "uninitialized"}] \n]
+      } else {
+        tputs $channel [appendArgs \
+            "---- failure resetting internal SQLiteLog state to " \
+            [expr {$initialize ? "initialized" : "uninitialized"}] \
+            ", error: " \n\t $error \n]
+      }
+    }
+
+    proc addTraceListenerForTestLogFile { channel } {
+      if {[info exists ::test_log] && [file exists $::test_log]} then {
+        debug trace -log true -logname [getTestSuite] -logfilename \
+            $::test_log; # throw
+
+        tputs $channel [appendArgs \
+            "---- copying trace listener output to test log file \"" \
+            $::test_log \"...\n]
+      }
+    }
+
     proc moveTestLogFile { path } {
       if {[info exists ::test_log] && [file exists $::test_log]} then {
         set old_test_log $::test_log
@@ -4978,6 +5189,24 @@ namespace eval ::Eagle {
 
         if {[info exists ::test_log_path]} then {
           set ::test_log_path $path
+        }
+
+        #
+        # NOTE: Since renaming the test log file during a test run
+        #       is unusual -AND- this condition cannot be detected
+        #       by the core script library without our help, issue
+        #       the manual notification to the core script library
+        #       now.
+        #
+        if {[llength [info commands ::newTestLog]] > 0} then {
+          if {[catch {
+            ::newTestLog $old_test_log $new_test_log
+          } error] == 0} then {
+            host result Ok ">>>> NEW TEST LOG FILE OK\n"
+          } else {
+            host result Error [appendArgs \
+                ">>>> NEW TEST LOG FILE ERROR: " $error \n]
+          }
         }
 
         tputs $::test_channel [appendArgs \
@@ -5188,6 +5417,21 @@ namespace eval ::Eagle {
         uplevel 1 [list loadSQLiteTestSettings $::test_channel .before]
 
         #
+        # NOTE: Check for TLS protocol support, e.g. TLS 1.2, etc.
+        #
+        checkForTlsOk \
+            $::test_channel [list system.data.sqlite.org] $::test_timeout
+
+        if {[haveConstraint tlsOk]} then {
+          addConstraint sdsTlsOk
+        }
+
+        #
+        # NOTE: Check for "reasonably" fast timing precision.
+        #
+        checkForTiming $::test_channel 25 sdsTiming; # 1/40th second.
+
+        #
         # NOTE: Show (and log) the global parameters that control where the
         #       build directory should be.
         #
@@ -5379,7 +5623,12 @@ namespace eval ::Eagle {
             if {![info exists ::no(deleteSqliteNativeFiles)]} then {
               if {![info exists ::no(deleteSqliteImplicitNativeFiles)]} then {
                 foreach fileName $nativeFileNames {
-                  tryDeleteAssembly $fileName
+                  tryDeleteBinaryAssembly $fileName
+
+                  if {![info exists \
+                      ::no(deleteSqliteImplicitNativeBuildFiles)]} then {
+                    tryDeleteBuildAssembly $fileName true
+                  }
                 }
               }
 
@@ -5387,14 +5636,24 @@ namespace eval ::Eagle {
                 if {![info exists ::no(deleteSqlitePlatformFiles)] && \
                     [string length $platform] > 0} then {
                   foreach fileName $nativeFileNames {
-                    tryDeleteAssembly $fileName $platform
+                    tryDeleteBinaryAssembly $fileName $platform
+
+                    if {![info exists \
+                        ::no(deleteSqlitePlatformBuildFiles)]} then {
+                      tryDeleteBuildAssembly $fileName true $platform
+                    }
                   }
                 }
 
                 if {![info exists ::no(deleteSqliteArchitectureFiles)] && \
                     [string length $architecture] > 0} then {
                   foreach fileName $nativeFileNames {
-                    tryDeleteAssembly $fileName $architecture
+                    tryDeleteBinaryAssembly $fileName $architecture
+
+                    if {![info exists \
+                        ::no(deleteSqliteArchitectureBuildFiles)]} then {
+                      tryDeleteBuildAssembly $fileName true $architecture
+                    }
                   }
                 }
               }
@@ -5409,7 +5668,12 @@ namespace eval ::Eagle {
               #
               if {![info exists ::no(deleteSqliteImplicitMixedFiles)]} then {
                 foreach fileName $mixedFileNames {
-                  tryDeleteAssembly $fileName
+                  tryDeleteBinaryAssembly $fileName
+
+                  if {![info exists \
+                      ::no(deleteSqliteImplicitMixedBuildFiles)]} then {
+                    tryDeleteBuildAssembly $fileName true
+                  }
                 }
               }
 
@@ -5417,14 +5681,24 @@ namespace eval ::Eagle {
                 if {![info exists ::no(deleteSqlitePlatformFiles)] && \
                     [string length $platform] > 0} then {
                   foreach fileName $mixedFileNames {
-                    tryDeleteAssembly $fileName $platform
+                    tryDeleteBinaryAssembly $fileName $platform
+
+                    if {![info exists \
+                        ::no(deleteSqlitePlatformBuildFiles)]} then {
+                      tryDeleteBuildAssembly $fileName true $platform
+                    }
                   }
                 }
 
                 if {![info exists ::no(deleteSqliteArchitectureFiles)] && \
                     [string length $architecture] > 0} then {
                   foreach fileName $mixedFileNames {
-                    tryDeleteAssembly $fileName $architecture
+                    tryDeleteBinaryAssembly $fileName $architecture
+
+                    if {![info exists \
+                        ::no(deleteSqliteArchitectureBuildFiles)]} then {
+                      tryDeleteBuildAssembly $fileName true $architecture
+                    }
                   }
                 }
               }
@@ -5432,7 +5706,7 @@ namespace eval ::Eagle {
 
             if {![info exists ::no(deleteSqliteManagedFiles)]} then {
               foreach fileName $managedFileNames {
-                tryDeleteAssembly $fileName
+                tryDeleteBinaryAssembly $fileName
               }
             }
           }
@@ -5507,6 +5781,14 @@ namespace eval ::Eagle {
           moveTestLogFile $logDirectory
 
           #
+          # NOTE: If requested, redirect captured trace listener output
+          #       to the test log file.
+          #
+          if {[hasRuntimeOption traceToTestLogFile]} then {
+            addTraceListenerForTestLogFile $::test_channel
+          }
+
+          #
           # NOTE: Skip trying to copy any files if instructed.
           #
           if {![info exists ::no(copySqliteFiles)]} then {
@@ -5560,11 +5842,18 @@ namespace eval ::Eagle {
                     "---- copying implicit \"native\" files...\n"
 
                 foreach fileName $nativeFileNames {
-                  tryCopyAssembly $fileName false
+                  tryCopyBuildAssembly $fileName false
 
                   if {[isDotNetCore] && ![file exists \
                       [getBuildFileName $fileName true]]} then {
                     tryCopyBinaryFile $fileName true
+                  }
+
+                  if {![info exists \
+                          ::no(copySqliteImplicitNativeBuildFiles)] && \
+                      ![file exists [getBuildFileName \
+                          $fileName true]]} then {
+                    tryCopyBinaryAssembly $fileName true
                   }
                 }
               }
@@ -5577,12 +5866,19 @@ namespace eval ::Eagle {
                       $platform \"...\n]
 
                   foreach fileName $nativeFileNames {
-                    tryCopyAssembly $fileName false $platform
+                    tryCopyBuildAssembly $fileName false $platform
 
                     if {[isDotNetCore] && ![file exists \
                         [getBuildFileName $fileName true \
                         $platform]]} then {
                       tryCopyBinaryFile $fileName true $platform
+                    }
+
+                    if {![info exists \
+                            ::no(copySqlitePlatformBuildFiles)] && \
+                        ![file exists [getBuildFileName \
+                            $fileName true $platform]]} then {
+                      tryCopyBinaryAssembly $fileName true $platform
                     }
                   }
                 }
@@ -5594,12 +5890,19 @@ namespace eval ::Eagle {
                       $architecture \"...\n]
 
                   foreach fileName $nativeFileNames {
-                    tryCopyAssembly $fileName false $architecture
+                    tryCopyBuildAssembly $fileName false $architecture
 
                     if {[isDotNetCore] && ![file exists \
                         [getBuildFileName $fileName true \
                         $architecture]]} then {
                       tryCopyBinaryFile $fileName true $architecture
+                    }
+
+                    if {![info exists \
+                            ::no(copySqliteArchitectureBuildFiles)] && \
+                        ![file exists [getBuildFileName \
+                            $fileName true $architecture]]} then {
+                      tryCopyBinaryAssembly $fileName true $architecture
                     }
                   }
                 }
@@ -5610,7 +5913,14 @@ namespace eval ::Eagle {
                       "---- copying forced \"native\" files...\n"
 
                   foreach fileName $nativeFileNames {
-                    tryCopyAssembly $fileName false
+                    tryCopyBuildAssembly $fileName false
+
+                    if {![info exists \
+                            ::no(copySqliteForcedNativeBuildFiles)] && \
+                        ![file exists [getBuildFileName \
+                            $fileName false]]} then {
+                      tryCopyBinaryAssembly $fileName false
+                    }
                   }
                 }
               }
@@ -5628,7 +5938,14 @@ namespace eval ::Eagle {
                     "---- copying implicit \"mixed\" files...\n"
 
                 foreach fileName $mixedFileNames {
-                  tryCopyAssembly $fileName false
+                  tryCopyBuildAssembly $fileName false
+
+                  if {![info exists \
+                          ::no(copySqliteImplicitMixedBuildFiles)] && \
+                      ![file exists [getBuildFileName \
+                          $fileName false]]} then {
+                    tryCopyBinaryAssembly $fileName false
+                  }
                 }
               }
 
@@ -5640,7 +5957,14 @@ namespace eval ::Eagle {
                       $platform \"...\n]
 
                   foreach fileName $mixedFileNames {
-                    tryCopyAssembly $fileName false $platform
+                    tryCopyBuildAssembly $fileName false $platform
+
+                    if {![info exists \
+                            ::no(copySqlitePlatformBuildFiles)] && \
+                        ![file exists [getBuildFileName \
+                            $fileName false $platform]]} then {
+                      tryCopyBinaryAssembly $fileName false $platform
+                    }
                   }
                 }
 
@@ -5651,7 +5975,14 @@ namespace eval ::Eagle {
                       $architecture \"...\n]
 
                   foreach fileName $mixedFileNames {
-                    tryCopyAssembly $fileName false $architecture
+                    tryCopyBuildAssembly $fileName false $architecture
+
+                    if {![info exists \
+                            ::no(copySqliteArchitectureBuildFiles)] && \
+                        ![file exists [getBuildFileName \
+                            $fileName false $architecture]]} then {
+                      tryCopyBinaryAssembly $fileName false $architecture
+                    }
                   }
                 }
 
@@ -5661,7 +5992,14 @@ namespace eval ::Eagle {
                       "---- copying forced \"mixed\" files...\n"
 
                   foreach fileName $mixedFileNames {
-                    tryCopyAssembly $fileName false
+                    tryCopyBuildAssembly $fileName false
+
+                    if {![info exists \
+                            ::no(copySqliteForcedMixedBuildFiles)] && \
+                        ![file exists [getBuildFileName \
+                            $fileName false]]} then {
+                      tryCopyBinaryAssembly $fileName false
+                    }
                   }
                 }
               }
@@ -5671,7 +6009,7 @@ namespace eval ::Eagle {
               tputs $::test_channel "---- copying \"managed\" files...\n"
 
               foreach fileName $managedFileNames {
-                tryCopyAssembly $fileName true
+                tryCopyBuildAssembly $fileName true
               }
             }
           }
@@ -5681,26 +6019,47 @@ namespace eval ::Eagle {
           #
           if {![info exists ::no(loadSqliteFiles)]} then {
             if {![info exists ::no(loadSqliteImplicitFiles)]} then {
-              tryLoadAssembly System.Data.SQLite.dll
+              tryLoadBinaryAssembly System.Data.SQLite.dll "" {
+                if {![info exists \
+                    ::no(initializeSqliteImplicitFiles)]} then {
+                  object invoke -flags +NonPublic \
+                      System.Data.SQLite.UnsafeNativeMethods \
+                      Initialize
+                }
+              }
             }
 
             if {![info exists ::no(loadSqliteLinqFiles)]} then {
-              tryLoadAssembly System.Data.SQLite.Linq.dll
+              tryLoadBinaryAssembly System.Data.SQLite.Linq.dll
             }
 
             if {![info exists ::no(loadSqliteEf6Files)]} then {
-              tryLoadAssembly System.Data.SQLite.EF6.dll
+              tryLoadBinaryAssembly System.Data.SQLite.EF6.dll
             }
 
             if {![info exists ::no(loadSqliteNonImplicitFiles)]} then {
               if {![info exists ::no(loadSqlitePlatformFiles)] && \
                   [string length $platform] > 0} then {
-                tryLoadAssembly System.Data.SQLite.dll $platform
+                tryLoadBinaryAssembly System.Data.SQLite.dll $platform {
+                  if {![info exists \
+                      ::no(initializeSqlitePlatformFiles)]} then {
+                    object invoke -flags +NonPublic \
+                        System.Data.SQLite.UnsafeNativeMethods \
+                        Initialize
+                  }
+                }
               }
 
               if {![info exists ::no(loadSqliteArchitectureFiles)] && \
                   [string length $architecture] > 0} then {
-                tryLoadAssembly System.Data.SQLite.dll $architecture
+                tryLoadBinaryAssembly System.Data.SQLite.dll $architecture {
+                  if {![info exists \
+                      ::no(initializeSqliteArchitectureFiles)]} then {
+                    object invoke -flags +NonPublic \
+                        System.Data.SQLite.UnsafeNativeMethods \
+                        Initialize
+                  }
+                }
               }
             }
           }
@@ -5802,7 +6161,7 @@ namespace eval ::Eagle {
 
           if {[catch {
             object invoke -flags +NonPublic \
-                System.Data.SQLite.SQLite3 DefineConstants
+                System.Data.SQLite.SQLite3 ProviderDefineConstants
           } defineConstants] == 0} then {
             tputs $::test_channel [appendArgs [formatList [lsort \
                 $defineConstants] <none>] \n]
@@ -5906,14 +6265,15 @@ namespace eval ::Eagle {
         #
         set defineConstants [list \
             CHECK_STATE COUNT_HANDLE DEBUG INTEROP_CODEC INTEROP_DEBUG \
-            INTEROP_EXTENSION_FUNCTIONS INTEROP_FTS5_EXTENSION \
-            INTEROP_INCLUDE_CEROD INTEROP_INCLUDE_EXTRA INTEROP_INCLUDE_SEE \
+            INTEROP_COMPRESS_EXTENSION INTEROP_EXTENSION_FUNCTIONS \
+            INTEROP_FTS5_EXTENSION INTEROP_INCLUDE_CEROD \
+            INTEROP_INCLUDE_EXTRA INTEROP_INCLUDE_SEE \
             INTEROP_INCLUDE_ZIPVFS INTEROP_JSON1_EXTENSION \
             INTEROP_LEGACY_CLOSE INTEROP_LOG INTEROP_PERCENTILE_EXTENSION \
             INTEROP_REGEXP_EXTENSION INTEROP_SESSION_EXTENSION \
             INTEROP_SHA1_EXTENSION INTEROP_SHA3_EXTENSION \
             INTEROP_TEST_EXTENSION INTEROP_TOTYPE_EXTENSION \
-            INTEROP_VIRTUAL_TABLE \
+            INTEROP_ZIPFILE_EXTENSION INTEROP_VIRTUAL_TABLE \
             NET_20 NET_35 NET_40 NET_45 NET_451 NET_452 NET_46 NET_461 \
             NET_462 NET_47 NET_471 NET_472 NET_48 NET_COMPACT_20 \
             NET_STANDARD_20 NET_STANDARD_21 PLATFORM_COMPACTFRAMEWORK \
@@ -6085,6 +6445,21 @@ namespace eval ::Eagle {
           }
         }
 
+        catch {
+          tputs $::test_channel \
+              "---- shared define constants for SQLite... "
+
+          if {[catch {
+            object invoke -flags +NonPublic \
+                System.Data.SQLite.SQLite3 DefineConstants
+          } defineConstants] == 0} then {
+            tputs $::test_channel [appendArgs [formatList [lsort \
+                $defineConstants] <none>] \n]
+          } else {
+            tputs $::test_channel unknown\n
+          }
+        }
+
         #
         # NOTE: Show the active test constraints.
         #
@@ -6185,8 +6560,8 @@ namespace eval ::Eagle {
               [getSQLiteTestDataPath] wal.db]]
 
           #
-          # NOTE: The various install/uninstall log files used to test the
-          #       design-time component installer.
+          # NOTE: The various install/uninstall log files used to test
+          #       the design-time component installer.
           #
           set testInstallVs2005LogFile [file nativename [file join \
               [getSQLiteTestDataPath] Installer_Test_Vs2005.log]]
@@ -6229,6 +6604,16 @@ namespace eval ::Eagle {
 
           set testUninstallVs2017LogFile [file nativename [file join \
               [getSQLiteTestDataPath] Uninstaller_Test_Vs2017.log]]
+
+          #####################################################################
+
+          #
+          # NOTE: Contains the fully qualified file name for the HtmlHelp
+          #       documentation zip file that should be checked into this
+          #       repository.
+          #
+          set htmlHelpDocsZipFile [file nativename [file join \
+              [getSQLiteHtmlHelpPath] HelpDocs.zip]]
 
           #####################################################################
 
@@ -6383,6 +6768,11 @@ namespace eval ::Eagle {
                 [file tail $testUninstallVs2017LogFile]]]} then {
               checkForFile $test_channel $testUninstallVs2017LogFile
             }
+
+            if {![haveConstraint [appendArgs file_ \
+                [file tail $htmlHelpDocsZipFile]]]} then {
+              checkForFile $test_channel $htmlHelpDocsZipFile
+            }
           }
         }
       }
@@ -6460,6 +6850,7 @@ namespace eval ::Eagle {
       if {![info exists ::no(epilogue.eagle)]} then {
         uplevel 1 {
           unset -nocomplain \
+              htmlHelpDocsZipFile \
               testUninstallVs2017LogFile testUninstallVs2015LogFile \
               testUninstallVs2013LogFile testUninstallVs2012LogFile \
               testUninstallVs2010LogFile testUninstallVs2008LogFile \

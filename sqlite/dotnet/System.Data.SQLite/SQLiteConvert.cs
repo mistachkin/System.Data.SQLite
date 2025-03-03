@@ -709,6 +709,11 @@ namespace System.Data.SQLite
                                 DateTimeStyles.AdjustToUniversal :
                                 DateTimeStyles.None),
                             kind);
+                    }
+            case SQLiteDateFormats.Binary:
+                {
+                    return BinaryToDateTime(Convert.ToInt64(
+                        dateText, CultureInfo.InvariantCulture), kind);
                 }
             default: /* ISO-8601 */
                 {
@@ -800,6 +805,29 @@ namespace System.Data.SQLite
     }
 
     /// <summary>
+    /// Converts the specified number of ticks since the epoch into a
+    /// <see cref="DateTime" /> value.
+    /// </summary>
+    /// <param name="binary">
+    /// The value from <see cref="DateTime.ToBinary" />.
+    /// </param>
+    /// <param name="kind">
+    /// Either Utc or Local time.
+    /// </param>
+    /// <returns>
+    /// The new <see cref="DateTime" /> value.
+    /// </returns>
+    internal static DateTime BinaryToDateTime(long binary, DateTimeKind kind)
+    {
+        DateTime dateTime = DateTime.FromBinary(binary);
+
+        if (dateTime.Kind != kind)
+            dateTime = DateTime.SpecifyKind(dateTime, kind);
+
+        return dateTime;
+    }
+
+    /// <summary>
     /// Converts a DateTime struct to a JulianDay double
     /// </summary>
     /// <param name="value">The DateTime to convert</param>
@@ -836,6 +864,54 @@ namespace System.Data.SQLite
     {
         if (formatString != null) return formatString;
         return (kind == DateTimeKind.Utc) ? _datetimeFormatUtc : _datetimeFormatLocal;
+    }
+
+    /// <summary>
+    /// Build list-formatted string from a list of string elements.
+    /// </summary>
+    /// <param name="list">
+    /// The list of strings to process.
+    /// </param>
+    /// <param name="emptyOnNull">
+    /// Non-zero if this method should avoid returning a null value
+    /// when the input list is null.
+    /// </param>
+    /// <returns>
+    /// Either the list-formatted string -OR- null if it cannot be
+    /// determined.
+    /// </returns>
+    internal static string ToString(
+        IList<string> list,
+        bool emptyOnNull
+        )
+    {
+        StringBuilder result;
+
+        if (list != null)
+        {
+            result = new StringBuilder();
+
+            foreach (string element in list)
+            {
+                if (element == null)
+                    continue;
+
+                if (result.Length > 0)
+                    result.Append(' ');
+
+                result.Append(element);
+            }
+        }
+        else if (emptyOnNull)
+        {
+            result = new StringBuilder();
+        }
+        else
+        {
+            result = null;
+        }
+
+        return (result != null) ? result.ToString() : null;
     }
 
     /// <summary>
@@ -883,6 +959,8 @@ namespace System.Data.SQLite
             case SQLiteDateFormats.CurrentCulture:
                 return dateValue.ToString((formatString != null) ?
                     formatString : FullFormat, CultureInfo.CurrentCulture);
+            case SQLiteDateFormats.Binary:
+                return dateValue.ToBinary().ToString(CultureInfo.InvariantCulture);
             default:
                 return (dateValue.Kind == DateTimeKind.Unspecified) ?
                     DateTime.SpecifyKind(dateValue, kind).ToString(
@@ -1323,20 +1401,29 @@ namespace System.Data.SQLite
     };
 
     /// <summary>
-    /// For a given intrinsic type, return a DbType
+    /// Attempt to convert the specified <see cref="Type" /> to a
+    /// <see cref="DbType" /> suitable for use with this library.
     /// </summary>
-    /// <param name="typ">The native type to convert</param>
-    /// <returns>The corresponding (closest match) DbType</returns>
-    internal static DbType TypeToDbType(Type typ)
+    /// <param name="type">
+    /// The type to convert.
+    /// </param>
+    /// <returns>
+    /// Either a specific <see cref="DbType" /> -OR- the default
+    /// <see cref="DbType" /> (i.e. <see cref="DbType.String" />)
+    /// if a more specific <see cref="DbType" /> is not matched.
+    /// </returns>
+    public static DbType TypeToDbType(Type type)
     {
-      TypeCode tc = Type.GetTypeCode(typ);
-      if (tc == TypeCode.Object)
-      {
-        if (typ == typeof(byte[])) return DbType.Binary;
-        if (typ == typeof(Guid)) return DbType.Guid;
-        return DbType.String;
-      }
-      return _typetodbtype[(int)tc];
+        TypeCode typeCode = Type.GetTypeCode(type);
+
+        if (typeCode == TypeCode.Object)
+        {
+            if (type == typeof(byte[])) return DbType.Binary;
+            if (type == typeof(Guid)) return DbType.Guid;
+            return DbType.String;
+        }
+
+        return _typetodbtype[(int)typeCode];
     }
 
     private static DbType[] _typetodbtype = {
@@ -1543,10 +1630,10 @@ namespace System.Data.SQLite
     {
         if (HelperMethods.HasFlags(flags, SQLiteConnectionFlags.TraceWarning))
         {
-            Trace.WriteLine(HelperMethods.StringFormat(
+            HelperMethods.Trace(HelperMethods.StringFormat(
                 CultureInfo.CurrentCulture,
                 "WARNING: Type mapping failed, returning default name \"{0}\" for type {1}.",
-                typeName, dbType));
+                typeName, dbType), TraceCategory.Warning);
         }
     }
 
@@ -1572,10 +1659,10 @@ namespace System.Data.SQLite
         if (!String.IsNullOrEmpty(typeName) &&
             HelperMethods.HasFlags(flags, SQLiteConnectionFlags.TraceWarning))
         {
-            Trace.WriteLine(HelperMethods.StringFormat(
+            HelperMethods.Trace(HelperMethods.StringFormat(
                 CultureInfo.CurrentCulture,
                 "WARNING: Type mapping failed, returning default type {0} for name \"{1}\".",
-                dbType, typeName));
+                dbType, typeName), TraceCategory.Warning);
         }
     }
 #endif
@@ -2395,7 +2482,58 @@ namespace System.Data.SQLite
       /// The closing of the object had no effect, e.g. because the
       /// underlying resource was not actually allocated or opened.
       /// </summary>
-      NothingToDo = 21
+      NothingToDo = 21,
+
+      /// <summary>
+      /// The connection string may be changed.
+      /// </summary>
+      ConnectionStringPreview = 22,
+
+      /// <summary>
+      /// The SQL string may be changed.
+      /// </summary>
+      SqlStringPreview = 23,
+
+      /// <summary>
+      /// The <see cref="SQLiteConnection.Cancel" /> method was invoked.
+      /// </summary>
+      Canceled = 24,
+
+      /// <summary>
+      /// The <see cref="SQLiteDataReader" /> is preparing to return
+      /// a row of data.
+      /// </summary>
+      DataReaderPreview = 25,
+
+      /// <summary>
+      /// The command was disposed.
+      /// </summary>
+      DisposedCommand = 26,
+
+      /// <summary>
+      /// The command is being finalized.
+      /// </summary>
+      FinalizingCommand = 27,
+
+      /// <summary>
+      /// The command was finalized.
+      /// </summary>
+      FinalizedCommand = 28,
+
+      /// <summary>
+      /// The data reader was disposed.
+      /// </summary>
+      DisposedDataReader = 29,
+
+      /// <summary>
+      /// The data reader is being finalized.
+      /// </summary>
+      FinalizingDataReader = 30,
+
+      /// <summary>
+      /// The data reader was finalized.
+      /// </summary>
+      FinalizedDataReader = 31
   }
 
   /// <summary>
@@ -2445,6 +2583,10 @@ namespace System.Data.SQLite
     /// Any string value that the .NET Framework can interpret as a valid DateTime using the current culture.
     /// </summary>
     CurrentCulture = 5,
+    /// <summary>
+    /// Use the value of <see cref="DateTime.ToBinary" />.
+    /// </summary>
+    Binary = 6,
     /// <summary>
     /// The default format for this provider.
     /// </summary>

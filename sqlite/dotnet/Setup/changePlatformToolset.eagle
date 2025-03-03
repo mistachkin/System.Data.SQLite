@@ -1,0 +1,72 @@
+###############################################################################
+#
+# changePlatformToolset.eagle --
+#
+# Written by Joe Mistachkin.
+# Released to the public domain, use at your own risk!
+#
+###############################################################################
+
+package require Eagle
+
+proc usage { error } {
+  if {[string length $error] > 0} then {puts stdout $error}
+
+  puts stdout "usage:\
+[file tail [info nameofexecutable]]\
+[file tail [info script]] <platformToolset>"
+
+  #
+  # NOTE: Indicate to the caller, if any, that we have failed.
+  #
+  exit 1
+}
+
+if {![info exists whatIf]} then {
+  set whatIf true
+}
+
+set argc [llength $argv]
+
+if {$argc == 1} then {
+  set path [file normalize [file dirname [info script]]]
+  set rootPath [file normalize [file dirname $path]]
+
+  if {![info exists platformToolset]} then {
+    set platformToolset [lindex $argv 0]
+  }
+
+  set pattern(1) {v\d+}
+  set pattern(2) [appendArgs {^} $pattern(1) {$}]
+
+  set pattern(3) [appendArgs \
+      <PlatformToolset> $pattern(1) </PlatformToolset>]
+
+  set subSpec(3) [appendArgs \
+      <PlatformToolset> $platformToolset </PlatformToolset>]
+
+  if {[regexp -- $pattern(2) $platformToolset]} then {
+    set fileNames [findFilesRecursive [file join $rootPath \
+        *.vcxproj]]
+
+    foreach fileName $fileNames {
+      set data [readFile $fileName]
+
+      if {[regsub -all -- \
+          $pattern(3) $data $subSpec(3) data] > 0} then {
+        if {!$whatIf} then {
+          writeFile $fileName $data
+        }
+
+        host result Ok [appendArgs \
+            "Changed property toolset for project file \"" \
+            $fileName "\" to \"" $platformToolset \".\n]
+      }
+    }
+  } else {
+    usage [appendArgs \
+        "bad platform toolset, must match: " $pattern(2)]
+  }
+} else {
+  usage ""
+}

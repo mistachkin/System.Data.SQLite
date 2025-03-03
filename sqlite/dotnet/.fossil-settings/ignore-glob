@@ -1,0 +1,11 @@
+Externals/Eagle/bin/net5/Eagle*.pdb
+Externals/Eagle/bin/net6/Eagle*.pdb
+Externals/Eagle/bin/netCore20/Eagle*.pdb
+Externals/Eagle/bin/netCore30/Eagle*.pdb
+Externals/Eagle/bin/netFramework20/Eagle*.pdb
+Externals/Eagle/bin/netFramework20/x64/Spilornis.pdb
+Externals/Eagle/bin/netFramework20/x86/Spilornis.pdb
+Externals/Eagle/bin/netFramework40/Eagle*.pdb
+Externals/Eagle/bin/netFramework40/x64/Spilornis.pdb
+Externals/Eagle/bin/netFramework40/x86/Spilornis.pdb
+Targets/SQLite.NET.Settings.targets.netFx40.user

@@ -1,0 +1,14 @@
+*.bmp
+*.chm
+*.db
+*.dll
+*.exe
+*.gif
+*.gz
+*.lib
+*.msi
+*.pdb
+*.png
+*.resources
+*.snk
+*.zip

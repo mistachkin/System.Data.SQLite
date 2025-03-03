@@ -6,6 +6,6 @@ if [[ -z "$SQLITE_NET_YEAR" ]]; then
   SQLITE_NET_YEAR=2013
 fi
 
-pushd "$scriptdir/.."
+pushd "$scriptdir/.." || exit 1
 mono Externals/Eagle/bin/netFramework40/EagleShell.exe -preInitialize "set test_configuration Release; set test_year {$SQLITE_NET_YEAR}; set build_directory {bin/$SQLITE_NET_YEAR/Release$SQLITE_NET_CONFIGURATION_SUFFIX/bin}" -file Tests/all.eagle "$@"
-popd
+popd || exit 1

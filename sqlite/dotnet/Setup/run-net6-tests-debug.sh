@@ -12,7 +12,7 @@ if [[ -z "$SQLITE_NET_YEAR" ]]; then
   SQLITE_NET_YEAR=2013
 fi
 
-pushd "$scriptdir/.."
+pushd "$scriptdir/.." || exit 1
 
 SQLITE_INTEROP_DIR=bin/$SQLITE_NET_YEAR/Debug$SQLITE_NET_CONFIGURATION_SUFFIX/bin
 SQLITE_INTEROP_FILE=$SQLITE_INTEROP_DIR/$libname
@@ -23,4 +23,4 @@ if [[ -f "${SQLITE_INTEROP_FILE}" ]]; then
 fi
 
 dotnet exec Externals/Eagle/bin/net6/EagleShell.dll -preInitialize "set test_configuration Debug; set test_configuration_suffix {$SQLITE_NET_CONFIGURATION_SUFFIX}; set test_native_configuration_suffix {$SQLITE_NET_CONFIGURATION_SUFFIX}; set test_year NetStandard21; set test_native_year {$SQLITE_NET_YEAR}; set test_extra netstandard2.1" -file Tests/all.eagle "$@"
-popd
+popd || exit 1

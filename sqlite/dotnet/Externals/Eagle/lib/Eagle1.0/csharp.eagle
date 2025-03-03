@@ -157,6 +157,113 @@ namespace eval ::Eagle {
   }
 
   #
+  # NOTE: This procedure attempts to populate the library directory -AND- the
+  #       build reference directory based on the version of the .NET Standard
+  #       currently in use.  Non-zero will be returned only upon success; no
+  #       script errors should be raised by this procedure.
+  #
+  proc populateDotNetStandardReferenceDirectories {
+          path standardVersion {libraryDirectoryVarName ""}
+          {buildReferenceSubDirectoryVarName ""} } {
+    if {[string length $libraryDirectoryVarName] > 0} then {
+      upvar 1 $libraryDirectoryVarName libraryDirectory
+    }
+
+    if {[string length $buildReferenceSubDirectoryVarName] > 0} then {
+      upvar 1 $buildReferenceSubDirectoryVarName buildReferenceSubDirectory
+    }
+
+    if {[info exists \
+        ::compileCSharp(dotNetStandardReferenceDirectories)]} then {
+      set libraryDirectory \
+          [lindex $::compileCSharp(dotNetStandardReferenceDirectories) 0]
+
+      set buildReferenceSubDirectory \
+          [lindex $::compileCSharp(dotNetStandardReferenceDirectories) 1]
+    } else {
+      switch -exact -- $standardVersion {
+        netstandard2.0 {
+          set libraryDirectory [file normalize \
+              [file join [file dirname $path] \
+              NuGetFallbackFolder netstandard.library]]
+
+          set buildReferenceSubDirectory \
+              [file join build $standardVersion ref]
+
+          return true
+        }
+        netstandard2.1 {
+          set libraryDirectory [file normalize \
+              [file join [file dirname [file dirname \
+              $path]] packs NETStandard.Library.Ref]]
+
+          set buildReferenceSubDirectory \
+              [file join ref $standardVersion]
+
+          return true
+        }
+      }
+    }
+
+    return false
+  }
+
+  #
+  # NOTE: This procedure attempts to determine which version of the .NET
+  #       Standard should be used for the explicit purpose of determining
+  #       the needed .NET Standard reference assembly path(s) to compile
+  #       C# code.  An empty string is used to indicate an error, i.e. no
+  #       suitable .NET Standard version was found.  This procedure should
+  #       not raise script errors.
+  #
+  proc determineDotNetStandardVersion {
+          path {useSdkVersion false} {defaultTargetVersion ""} } {
+    if {!$useSdkVersion && [isDotNetCore] && \
+        [info exists ::eagle_platform(runtimeVersion)]} then {
+      set targetVersion $::eagle_platform(runtimeVersion)
+    } elseif {[string length $path] > 0} then {
+      set targetVersion [file tail $path]
+    } else {
+      set targetVersion $defaultTargetVersion
+    }
+
+    if {[string length $targetVersion] > 0} then {
+      if {[info exists ::compileCSharp(dotNetStandardVersions)]} then {
+        set standardVersions $::compileCSharp(dotNetStandardVersions)
+      } else {
+        if {[string match 9.* $targetVersion] || \
+            [string match 8.* $targetVersion] || \
+            [string match 7.* $targetVersion] || \
+            [string match 6.* $targetVersion] || \
+            [string match 5.* $targetVersion] || \
+            [string match 3.* $targetVersion]} then {
+          set standardVersions [list netstandard2.1 netstandard2.0]
+        } elseif {[string match 2.* $targetVersion]} then {
+          set standardVersions [list netstandard2.0 netstandard2.1]
+        }
+      }
+
+      foreach standardVersion $standardVersions {
+        unset -nocomplain libraryDirectory
+        unset -nocomplain buildReferenceSubDirectory
+
+        populateDotNetStandardReferenceDirectories \
+            $path $standardVersion libraryDirectory \
+            buildReferenceSubDirectory
+
+        if {[info exists libraryDirectory] && \
+            [string length $libraryDirectory] > 0 && \
+            [info exists buildReferenceSubDirectory] && \
+            [string length $buildReferenceSubDirectory] > 0} then {
+          return $standardVersion
+        }
+      }
+    }
+
+    return ""
+  }
+
+  #
   # NOTE: This procedure is used to determine the fully qualified path to the
   #       directory containing the reference assemblies for the .NET Standard
   #       2.x.  An empty string will be returned to indicate an error.  This
@@ -168,52 +275,25 @@ namespace eval ::Eagle {
 
     if {[string length $path] > 0} then {
       if {[string length $standardVersion] == 0} then {
-        if {!$useSdkVersion && [isDotNetCore] && \
-            [info exists ::eagle_platform(runtimeVersion)]} then {
-          set targetVersion $::eagle_platform(runtimeVersion)
-        } else {
-          set targetVersion [file tail $path]
-        }
-
-        if {[string match 7.* $targetVersion] || \
-            [string match 6.* $targetVersion] || \
-            [string match 5.* $targetVersion] || \
-            [string match 3.* $targetVersion]} then {
-          set standardVersion netstandard2.1
-        } elseif {[string match 2.* $targetVersion]} then {
-          set standardVersion netstandard2.0
-        }
+        set standardVersion [determineDotNetStandardVersion \
+            $path $useSdkVersion]
       }
 
-      switch -exact -- $standardVersion {
-        netstandard2.0 {
-          set libraryDirectory [file normalize [file join [file dirname \
-              $path] NuGetFallbackFolder netstandard.library]]
+      unset -nocomplain libraryDirectory
+      unset -nocomplain buildReferenceSubDirectory
 
-          set buildReferenceSubDirectory [file join build $standardVersion \
-              ref]
-        }
-        netstandard2.1 {
-          set libraryDirectory [file normalize [file join [file dirname \
-              [file dirname $path]] packs NETStandard.Library.Ref]]
+      populateDotNetStandardReferenceDirectories \
+          $path $standardVersion libraryDirectory \
+          buildReferenceSubDirectory
 
-          set buildReferenceSubDirectory [file join ref $standardVersion]
-        }
-        default {
-          #
-          # TODO: Do something else here?  The version of the standard is
-          #       not known.  Perhaps do some kind of search?
-          #
-          set libraryDirectory ""
-          set buildReferenceSubDirectory ""
-        }
-      }
-
-      if {[string length $libraryDirectory] > 0 && \
+      if {[info exists libraryDirectory] && \
+          [string length $libraryDirectory] > 0 && \
+          [info exists buildReferenceSubDirectory] && \
           [string length $buildReferenceSubDirectory] > 0} then {
         if {[string length $packageVersion] > 0} then {
-          set assemblyDirectory [file normalize [file join \
-              $libraryDirectory $packageVersion $buildReferenceSubDirectory]]
+          set assemblyDirectory [file normalize \
+              [file join $libraryDirectory $packageVersion \
+              $buildReferenceSubDirectory]]
 
           if {[file exists $assemblyDirectory]} then {
             return $assemblyDirectory
@@ -222,15 +302,17 @@ namespace eval ::Eagle {
           set compareCommand [list package vsort]
           set globPathPattern [file join $libraryDirectory *]
 
-          set maybeVersions [lsort -decreasing -command $compareCommand \
-              [lmap directory [glob -nocomplain -types {d} $globPathPattern] \
+          set maybeVersions [lsort -decreasing -command \
+              $compareCommand [lmap directory [glob \
+              -nocomplain -types {d} $globPathPattern] \
               { file tail $directory }]]
 
           catch {object removecallback $compareCommand}
 
           foreach maybeVersion $maybeVersions {
-            set assemblyDirectory [file normalize [file join \
-                $libraryDirectory $maybeVersion $buildReferenceSubDirectory]]
+            set assemblyDirectory [file normalize \
+                [file join $libraryDirectory $maybeVersion \
+                $buildReferenceSubDirectory]]
 
             if {[file exists $assemblyDirectory]} then {
               return $assemblyDirectory
@@ -288,7 +370,8 @@ namespace eval ::Eagle {
   #       Non-zero is returned to indicate success.  This procedure should not
   #       raise script errors.
   #
-  proc doesCompileCSharpWork { {name ""} {errorsVarName ""} } {
+  proc doesCompileCSharpWork {
+          {name ""} {errorsVarName ""} {memory true} args } {
     if {[string length $errorsVarName] > 0} then {
       upvar 1 $errorsVarName errors
     }
@@ -309,48 +392,119 @@ namespace eval ::Eagle {
       return false
     }
 
+    set local_args $args
+
+    if {!$memory} then {
+      lappend local_args GenerateExecutable true
+      # lappend local_args MainClass [lindex $program 0]
+    }
+
     unset -nocomplain results local_errors
 
-    if {[catch {
-      compileCSharp [lindex $program 1] true false true results local_errors
-    } code]} then {
-      set errors [list [appendArgs \
-          "caught error while compiling \"" $name "\" test program: " \
-          $code]]
+    try {
+      if {[catch {
+        eval compileCSharp [list [lindex $program 1]] \
+            $memory false true results local_errors $local_args
+      } result]} then {
+        set errors [list [appendArgs \
+            "caught error while compiling \"" $name \
+            "\" test program: " $result]]
 
-      return false
+        return false
+      }
+
+      if {$memory} then {
+        set code $result
+      } else {
+        set code [lindex $result 0]
+        set outputFileName [lindex $result 1]
+      }
+
+      if {$code ne "Ok"} then {
+        set errors [list [appendArgs \
+            "errors from compilation of \"" $name "\" test program: " \
+            [expr {[info exists local_errors] ? $local_errors : $code}]]]
+
+        return false
+      }
+
+      if {$memory} then {
+        if {[llength [info commands object]] == 0} then {
+          set errors [list [appendArgs "cannot invoke \"" $name \
+              "\" test program, missing \"object\" command"]]
+
+          return false
+        }
+
+        if {[catch {
+          object invoke [lindex $program 0] Main null
+        } haveExitCode]} then {
+          set errors [list [appendArgs "caught error while invoking \"" \
+              $name "\" test program: " $haveExitCode]]
+
+          return false
+        }
+
+        set wantExitCode 0
+      } else {
+        if {[isDotNetCore]} then {
+          #
+          # NOTE: What is the fully qualified file name of the .NET Core
+          #       runtime configuration file for this (managed) process?
+          #
+          set sourceRuntimeConfigFileName [appendArgs [file rootname \
+              [getShellExecutableName]] .runtimeconfig.json]
+        }
+
+        if {[catch {
+          #
+          # HACK: Apparently, running even a trivial compiled executable
+          #       using the .NET Core runtime requires the presence of a
+          #       runtime configuration file and there is no (easy?) way
+          #       to directly instruct the C# compiler to generate one;
+          #       therefore, copy the one being used for this process,
+          #       which is presumably running on the .NET Core runtime.
+          #
+          if {[info exists sourceRuntimeConfigFileName] && \
+              [file exists $sourceRuntimeConfigFileName]} then {
+            set targetRuntimeConfigFileName [appendArgs [file rootname \
+                $outputFileName] .runtimeconfig.json]
+
+            if {![file exists $targetRuntimeConfigFileName]} then {
+              file copy $sourceRuntimeConfigFileName \
+                  $targetRuntimeConfigFileName
+            }
+          }
+
+          set command [list exec -exitcode haveExitCode --]
+          eval lappend command [getRuntimeCommandLine $outputFileName]
+          eval $command
+        } error]} then {
+          set errors [list [appendArgs \
+              "caught error while executing \"" $name "\" test program: " \
+              $error]]
+
+          return false
+        }
+
+        set wantExitCode Success
+      }
+    } finally {
+      if {[info exists targetRuntimeConfigFileName] && \
+          [file exists $targetRuntimeConfigFileName]} then {
+        catch {file delete $targetRuntimeConfigFileName}
+      }
+
+      if {[info exists outputFileName] && \
+          [file exists $outputFileName]} then {
+        catch {file delete $outputFileName}
+      }
     }
 
-    if {$code ne "Ok"} then {
+    if {$haveExitCode ne $wantExitCode} then {
       set errors [list [appendArgs \
-          "errors from compilation of \"" $name "\" test program: " \
-          [expr {[info exists local_errors] ? $local_errors : $code}]]]
-
-      return false
-    }
-
-    if {[llength [info commands object]] == 0} then {
-      set errors [list [appendArgs \
-          "cannot execute \"" $name \
-          "\" test program, missing \"object\" command"]]
-
-      return false
-    }
-
-    if {[catch {
-      object invoke [lindex $program 0] Main null
-    } exitCode]} then {
-      set errors [list [appendArgs \
-          "caught error while executing \"" $name "\" test program: " \
-          $exitCode]]
-
-      return false
-    }
-
-    if {$exitCode ne "0"} then {
-      set errors [list [appendArgs \
-          "bad exit code from \"" $name "\" test program: " \
-          $exitCode]]
+          "bad exit code from \"" $name \
+          "\" test program: " $haveExitCode]]
 
       return false
     }
@@ -421,6 +575,20 @@ namespace eval ::Eagle {
       }
       TreatWarningsAsErrors {
         set name -warnaserror
+      }
+      GenerateExecutable {
+        set name -target
+
+        if {[string is true -strict $value]} then {
+          set value exe
+        } else {
+          set value library
+        }
+      }
+      MainClass -
+      MainEntryPoint -
+      StartupObject {
+        set name -main
       }
       OutputAssembly {
         if {[string length $outputAssemblyVarName] > 0} then {
@@ -692,13 +860,30 @@ namespace eval ::Eagle {
         System.CodeDom.Compiler.CompilerParameters]
 
     #
+    # HACK: Pre-check the list of extra parameters now.  If it will change
+    #       the assembly to an executable, use that file extension instead.
+    #
+    set outputExtension [object invoke \
+        Eagle._Constants.FileExtension Library]
+
+    foreach {name value} $args {
+      if {[string equal $name GenerateExecutable] && \
+          [string is true -strict $value]} then {
+        set outputExtension [object invoke \
+            Eagle._Constants.FileExtension Executable]
+
+        break
+      }
+    }
+
+    #
     # NOTE: Do we not want to persist the generated assembly to disk?
     #       Either way, we must make sure the temporary file names used
     #       are determinstic (i.e. from our perspective, so that we can
     #       delete them later).
     #
     $parameters OutputAssembly [set outputFileName [appendArgs [set \
-        tempName(1) [file tempname]] .dll]]
+        tempName(1) [file tempname]] $outputExtension]]
 
     if {$memory} then {
       $parameters GenerateInMemory true
@@ -937,7 +1122,15 @@ namespace eval ::Eagle {
     #       code to compile and one to hold the generated assembly.
     #
     set sourceFileName [appendArgs [set tempName(1) [file tempname]] .cs]
-    set outputFileName [appendArgs [set tempName(2) [file tempname]] .dll]
+
+    #
+    # HACK: Pre-check the list of extra parameters now.  If it will change
+    #       the assembly to an executable, use that file extension instead.
+    #
+    set outputExtension .dll; # HACK: Always DLL on .NET Core.
+
+    set outputFileName [appendArgs \
+        [set tempName(2) [file tempname]] $outputExtension]
 
     #
     # NOTE: Use a try/finally block to cleanup temporary files.
@@ -966,7 +1159,9 @@ namespace eval ::Eagle {
       # NOTE: Always build as a library so that we do not require a static
       #       Main method.
       #
-      lappend command -target:library
+      if {[lsearch -glob -- $command -target:*] == -1} then {
+        lappend command -target:library
+      }
 
       #
       # NOTE: If symbols are enabled, add the necessary command line

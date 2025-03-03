@@ -49,6 +49,7 @@
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="props\$(Configuration).props" />
   <Import Project="props\sqlite3.props" />
   <Import Project="props\SQLite.Interop.2017.props" />
   <PropertyGroup>
@@ -150,6 +151,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -196,6 +198,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);$(SQLITE_DISABLE_X64_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -242,6 +245,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -283,6 +287,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);$(SQLITE_DISABLE_X64_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -327,6 +332,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -375,6 +381,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);$(SQLITE_DISABLE_X64_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -423,6 +430,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -467,6 +475,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>$(SQLITE_DISABLE_WARNINGS);$(SQLITE_DISABLE_X64_WARNINGS);%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;RC_MSC_VER=1910;INTEROP_RC_VERSION=$(INTEROP_RC_VERSION);$(INTEROP_RESOURCE_DEFINES);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -506,6 +515,9 @@
     <ClCompile Include="src\contrib\extension-functions.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\ext\compress.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\ext\fts5.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -525,6 +537,9 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\ext\vtshim.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ext\zipfile.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\generic\interop.c" />

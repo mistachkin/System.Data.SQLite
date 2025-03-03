@@ -13,6 +13,8 @@ namespace System.Data.SQLite
   using System.Diagnostics;
   using System.Collections.Generic;
   using System.ComponentModel;
+  using System.Globalization;
+  using System.Text;
 
   /// <summary>
   /// SQLite implementation of DbCommand.
@@ -22,6 +24,13 @@ namespace System.Data.SQLite
 #endif
   public sealed class SQLiteCommand : DbCommand, ICloneable
   {
+    /// <summary>
+    /// These are the extra command behavior flags that should be used for all calls
+    /// into the <see cref="ExecuteNonQuery()" />, <see cref="ExecuteScalar()" />,
+    /// and <see cref="ExecuteReader()" /> methods.
+    /// </summary>
+    public static CommandBehavior? GlobalCommandBehaviors = null;
+
     /// <summary>
     /// The default connection string to be used when creating a temporary
     /// connection to execute a command via the static
@@ -79,6 +88,11 @@ namespace System.Data.SQLite
     /// Transaction associated with this command
     /// </summary>
     private SQLiteTransaction _transaction;
+
+    static SQLiteCommand()
+    {
+        InitializeGlobalCommandBehaviors();
+    }
 
     ///<overloads>
     /// Constructs a new SQLiteCommand
@@ -158,9 +172,12 @@ namespace System.Data.SQLite
       if (transaction != null)
         Transaction = transaction;
 
-      SQLiteConnection.OnChanged(connection, new ConnectionEventArgs(
-          SQLiteConnectionEventType.NewCommand, null, transaction, this,
-          null, null, null, null));
+      if (SQLiteConnection.CanOnChanged(connection, false))
+      {
+          SQLiteConnection.OnChanged(connection, new ConnectionEventArgs(
+              SQLiteConnectionEventType.NewCommand, null, transaction, this,
+              null, null, null, null));
+      }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,9 +212,15 @@ namespace System.Data.SQLite
     /// <param name="disposing">Whether or not the class is being explicitly or implicitly disposed</param>
     protected override void Dispose(bool disposing)
     {
-        SQLiteConnection.OnChanged(_cnn, new ConnectionEventArgs(
-            SQLiteConnectionEventType.DisposingCommand, null, _transaction, this,
-            null, null, null, new object[] { disposing, disposed }));
+        if (SQLiteConnection.CanOnChanged(_cnn, false))
+        {
+            SQLiteConnection.OnChanged(
+                _cnn, new ConnectionEventArgs(disposing ?
+                    SQLiteConnectionEventType.DisposingCommand :
+                    SQLiteConnectionEventType.FinalizingCommand,
+                null, _transaction, this, null, null, null,
+                new object[] { disposing, disposed }));
+        }
 
         bool skippedDispose = false;
 
@@ -211,8 +234,13 @@ namespace System.Data.SQLite
                     // dispose managed resources here...
                     ////////////////////////////////////
 
-                    // If a reader is active on this command, don't destroy the command, instead let the reader do it
+                    //
+                    // NOTE: If there is an active reader on
+                    //       us, let it perform the statement
+                    //       cleanup.
+                    //
                     SQLiteDataReader reader = null;
+
                     if (_activeReader != null)
                     {
                         try
@@ -221,12 +249,42 @@ namespace System.Data.SQLite
                         }
                         catch (InvalidOperationException)
                         {
+                            // do nothing.
                         }
                     }
 
                     if (reader != null)
                     {
                         reader._disposeCommand = true;
+
+                        if (HelperMethods.HasFlags(reader._flags,
+                                SQLiteConnectionFlags.AggressiveDisposal))
+                        {
+                            //
+                            // HACK: Copy the statement list to our active reader,
+                            //       after adding a reference to each one of the
+                            //       valid statements.
+                            //
+                            if (_statementList != null)
+                            {
+                                List<SQLiteStatement> statements =
+                                    new List<SQLiteStatement>();
+
+                                foreach (SQLiteStatement statement in _statementList)
+                                {
+                                    if (statement == null) continue;
+                                    statement.AddReference();
+                                    statements.Add(statement);
+                                }
+
+                                reader._statementList = statements;
+                            }
+                            else
+                            {
+                                reader._statementList = null;
+                            }
+                        }
+
                         _activeReader = null;
                         skippedDispose = true;
                         return;
@@ -252,6 +310,16 @@ namespace System.Data.SQLite
                 // NOTE: Everything should be fully disposed at this point.
                 //
                 disposed = true;
+
+                if (SQLiteConnection.CanOnChanged(_cnn, false))
+                {
+                    SQLiteConnection.OnChanged(
+                        _cnn, new ConnectionEventArgs(disposing ?
+                            SQLiteConnectionEventType.DisposedCommand :
+                            SQLiteConnectionEventType.FinalizedCommand,
+                        null, _transaction, this, null, null, null,
+                        new object[] { disposing, disposed }));
+                }
             }
         }
     }
@@ -259,17 +327,6 @@ namespace System.Data.SQLite
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /// <summary>
-    /// This method attempts to query the flags associated with the database
-    /// connection in use.  If the database connection is disposed, the default
-    /// flags will be returned.
-    /// </summary>
-    /// <param name="command">
-    /// The command containing the databse connection to query the flags from.
-    /// </param>
-    /// <returns>
-    /// The connection flags value.
-    /// </returns>
     internal static SQLiteConnectionFlags GetFlags(
         SQLiteCommand command
         )
@@ -294,44 +351,177 @@ namespace System.Data.SQLite
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void DisposeStatements()
+    internal static int GetPrepareRetries(
+        SQLiteCommand command
+        )
     {
-        if (_statementList == null) return;
-
-        int x = _statementList.Count;
-
-        for (int n = 0; n < x; n++)
+        try
         {
-            SQLiteStatement stmt = _statementList[n];
-            if (stmt == null) continue;
-            stmt.Dispose();
+            if (command != null)
+            {
+                SQLiteConnection cnn = command._cnn;
+
+                if (cnn != null)
+                    return cnn.PrepareRetries;
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // do nothing.
         }
 
-        _statementList = null;
+        return SQLiteConnection.DefaultPrepareRetries;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    internal static int GetStepRetries(
+        SQLiteCommand command
+        )
+    {
+        try
+        {
+            if (command != null)
+            {
+                SQLiteConnection cnn = command._cnn;
+
+                if (cnn != null)
+                    return cnn.StepRetries;
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // do nothing.
+        }
+
+        return SQLiteConnection.DefaultStepRetries;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    internal static int GetMaximumSleepTime(
+        SQLiteCommand command
+        )
+    {
+        try
+        {
+            if (command != null)
+                return command._maximumSleepTime;
+        }
+        catch (ObjectDisposedException)
+        {
+            // do nothing.
+        }
+
+        return SQLiteConnection.DefaultConnectionMaximumSleepTime;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// Modifies the specified <see cref="CommandBehavior" /> to include
+    /// the global command behavior flags, if any.
+    /// </summary>
+    /// <param name="behavior">
+    /// The <see cref="CommandBehavior" /> as it was originally passed into
+    /// the <see cref="ExecuteNonQuery()" />, <see cref="ExecuteScalar()" />,
+    /// or <see cref="ExecuteReader()" /> methods.
+    /// </param>
+    private void MaybeAddGlobalCommandBehaviors(
+        ref CommandBehavior behavior /* in, out */
+        )
+    {
+        CommandBehavior? globalBehaviors = GlobalCommandBehaviors;
+
+        if (globalBehaviors != null)
+            behavior |= (CommandBehavior)globalBehaviors;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static void InitializeGlobalCommandBehaviors()
+    {
+        string value = UnsafeNativeMethods.GetSettingValue(
+            "SQLite_GlobalCommandBehaviors", null);
+
+        if (value != null)
+        {
+            CommandBehavior? behavior;
+            string error = null;
+
+            behavior = CombineBehaviors(
+                GlobalCommandBehaviors, value, out error);
+
+            if (behavior != null)
+            {
+                GlobalCommandBehaviors = behavior;
+            }
+#if !NET_COMPACT_20 && TRACE_WARNING
+            else
+            {
+                HelperMethods.Trace(HelperMethods.StringFormat(
+                    CultureInfo.CurrentCulture,
+                    "WARNING: Could not initialize global command behaviors: {0}",
+                    error), TraceCategory.Warning);
+            }
+#endif
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void DisposeStatements()
+    {
+        DisposeStatements(true, ref _statementList);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    internal static void DisposeStatements(
+        bool force,
+        ref List<SQLiteStatement> statements
+        )
+    {
+        if (statements == null) return;
+
+        int count = statements.Count;
+
+        for (int index = 0; index < count; index++)
+        {
+            SQLiteStatement statement = statements[index];
+
+            if (statement == null) continue;
+
+            if ((statement.RemoveReference() <= 0) || force)
+                statement.Dispose();
+        }
+
+        statements.Clear();
+        statements = null;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     private void ClearDataReader()
     {
-      if (_activeReader != null)
-      {
-        SQLiteDataReader reader = null;
-
-        try
+        if (_activeReader != null)
         {
-          reader = _activeReader.Target as SQLiteDataReader;
-        }
-        catch(InvalidOperationException)
-        {
-          // do nothing.
-        }
+            SQLiteDataReader reader = null;
 
-        if (reader != null)
-          reader.Close(); /* Dispose */
+            try
+            {
+                reader = _activeReader.Target as SQLiteDataReader;
+            }
+            catch (InvalidOperationException)
+            {
+                // do nothing.
+            }
 
-        _activeReader = null;
-      }
+            if (reader != null)
+                reader.Close(); /* Dispose */
+
+            _activeReader = null;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,47 +542,57 @@ namespace System.Data.SQLite
     /// </summary>
     internal SQLiteStatement BuildNextCommand()
     {
-      SQLiteStatement stmt = null;
+        SQLiteStatement stmt = null;
 
-      try
-      {
-        if ((_cnn != null) && (_cnn._sql != null))
+        try
         {
-          if (_statementList == null)
-            _remainingText = _commandText;
+            if ((_cnn != null) && (_cnn._sql != null))
+            {
+                if (_statementList == null)
+                    _remainingText = _commandText;
 
-          stmt = _cnn._sql.Prepare(_cnn, _remainingText, (_statementList == null) ? null : _statementList[_statementList.Count - 1], (uint)(_commandTimeout * 1000), ref _remainingText);
+                stmt = _cnn._sql.Prepare(_cnn, this, _remainingText, (_statementList == null) ? null : _statementList[_statementList.Count - 1], (uint)(_commandTimeout * 1000), ref _remainingText);
 
-          if (stmt != null)
-          {
-            stmt._command = this;
+                if (stmt != null)
+                {
+                    stmt.AddReference();
+                    stmt._command = this;
 
-            if (_statementList == null)
-              _statementList = new List<SQLiteStatement>();
+                    if (_statementList == null)
+                        _statementList = new List<SQLiteStatement>();
 
-            _statementList.Add(stmt);
+                    _statementList.Add(stmt);
 
-            _parameterCollection.MapParameters(stmt);
-            stmt.BindParameters();
-          }
+                    _parameterCollection.MapParameters(stmt);
+                    stmt.BindParameters();
+                }
+            }
+            return stmt;
         }
-        return stmt;
-      }
-      catch (Exception)
-      {
-        if (stmt != null)
+        catch (Exception)
         {
-          if ((_statementList != null) && _statementList.Contains(stmt))
-            _statementList.Remove(stmt);
+            if (stmt != null)
+            {
+                if ((_statementList != null) &&
+                    _statementList.Contains(stmt))
+                {
+                    _statementList.Remove(stmt);
+                }
 
-          stmt.Dispose();
+                if ((stmt.RemoveReference() <= 0) ||
+                    !HelperMethods.HasFlags(
+                        SQLiteConnection.GetFlags(_cnn),
+                        SQLiteConnectionFlags.AggressiveDisposal))
+                {
+                    stmt.Dispose();
+                }
+            }
+
+            // If we threw an error compiling the statement, we cannot continue on so set the remaining text to null.
+            _remainingText = null;
+
+            throw;
         }
-
-        // If we threw an error compiling the statement, we cannot continue on so set the remaining text to null.
-        _remainingText = null;
-
-        throw;
-      }
     }
 
     internal SQLiteStatement GetStatement(int index)
@@ -401,7 +601,7 @@ namespace System.Data.SQLite
       if (_statementList == null) return BuildNextCommand();
 
       // If we're at the last built statement and want the next unbuilt statement, then build it
-      if (index == _statementList.Count)
+      if (index >= _statementList.Count)
       {
         if (String.IsNullOrEmpty(_remainingText) == false) return BuildNextCommand();
         else return null; // No more commands
@@ -446,7 +646,20 @@ namespace System.Data.SQLite
       {
         CheckDisposed();
 
-        if (_commandText == value) return;
+        string newCommandText = value;
+
+        if (SQLiteConnection.CanOnChanged(_cnn, false))
+        {
+            ConnectionEventArgs previewEventArgs = new ConnectionEventArgs(
+                SQLiteConnectionEventType.SqlStringPreview,
+                null, null, null, null, null, null, null, null);
+
+            previewEventArgs.Result = newCommandText;
+            SQLiteConnection.OnChanged(_cnn, previewEventArgs);
+            newCommandText = previewEventArgs.Result;
+        }
+
+        if (_commandText == newCommandText) return;
 
         if (_activeReader != null && _activeReader.IsAlive)
         {
@@ -454,7 +667,7 @@ namespace System.Data.SQLite
         }
 
         ClearCommands();
-        _commandText = value;
+        _commandText = newCommandText;
 
         if (_cnn == null) return;
       }
@@ -560,18 +773,15 @@ namespace System.Data.SQLite
         if (_activeReader != null && _activeReader.IsAlive)
           throw new InvalidOperationException("Cannot set Connection while a DataReader is active");
 
-        if (_cnn != null)
-        {
-          ClearCommands();
-          //_cnn.RemoveCommand(this);
-        }
+        if (Object.ReferenceEquals(_cnn, value))
+          return;
+
+        ClearCommands();
 
         _cnn = value;
+
         if (_cnn != null)
           _version = _cnn._version;
-
-        //if (_cnn != null)
-        //  _cnn.AddCommand(this);
       }
     }
 
@@ -689,8 +899,8 @@ namespace System.Data.SQLite
             while ((text != null) && (text.Length > 0))
             {
                 currentStatement = sqlBase.Prepare(
-                    connection, text, previousStatement, timeout,
-                    ref text); /* throw */
+                    connection, this, text, previousStatement,
+                    timeout, ref text); /* throw */
 
                 previousStatement = currentStatement;
 
@@ -787,7 +997,7 @@ namespace System.Data.SQLite
     /// </param>
     /// <param name="connectionString">
     /// The connection string to the database to be opened, used, and closed.  If
-    /// this parameter is null, a temporary in-memory databse will be used.
+    /// this parameter is null, a temporary in-memory database will be used.
     /// </param>
     /// <param name="args">
     /// The SQL parameter values to be used when building the command object to be
@@ -828,7 +1038,7 @@ namespace System.Data.SQLite
     /// </param>
     /// <param name="connectionString">
     /// The connection string to the database to be opened, used, and closed.  If
-    /// this parameter is null, a temporary in-memory databse will be used.
+    /// this parameter is null, a temporary in-memory database will be used.
     /// </param>
     /// <param name="args">
     /// The SQL parameter values to be used when building the command object to be
@@ -1050,6 +1260,8 @@ namespace System.Data.SQLite
       SQLiteConnection.Check(_cnn);
       InitializeForReader();
 
+      MaybeAddGlobalCommandBehaviors(ref behavior);
+
       SQLiteDataReader rd = new SQLiteDataReader(this, behavior);
       _activeReader = new WeakReference(rd, false);
 
@@ -1098,13 +1310,319 @@ namespace System.Data.SQLite
       CheckDisposed();
       SQLiteConnection.Check(_cnn);
 
+      MaybeAddGlobalCommandBehaviors(ref behavior);
+
       using (SQLiteDataReader reader = ExecuteReader(behavior |
           CommandBehavior.SingleRow | CommandBehavior.SingleResult))
       {
+        //
+        // BUGFIX: See PrivateMaybeReadRemaining comments.
+        //
+        PrivateMaybeReadRemaining(reader, behavior);
+
         while (reader.NextResult()) ;
         return reader.RecordsAffected;
       }
     }
+
+    ///////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// This integer value is used with <see cref="CommandBehavior" />
+    /// values.  When set, extra <see cref="SQLiteDataReader.Read" />
+    /// calls are not performed within the <see cref="ExecuteScalar()" />
+    /// methods for write transactions.  This value should be used with
+    /// extreme care because it can cause unusual behavior.  It is
+    /// intended for use only by legacy applications that rely on the
+    /// old, incorrect behavior.
+    /// </summary>
+    public const CommandBehavior SkipExtraReads =
+        (CommandBehavior)0x10000000;
+
+    /// <summary>
+    /// This integer value is used with <see cref="CommandBehavior" />
+    /// values.  When set, extra <see cref="SQLiteDataReader.Read" />
+    /// calls are performed within the <see cref="ExecuteScalar()" />
+    /// methods for all transactions.  This value should be used with
+    /// extreme care because it can cause unusual behavior.
+    /// </summary>
+    public const CommandBehavior ForceExtraReads =
+        (CommandBehavior)0x20000000;
+
+    /// <summary>
+    /// Checks to see if the extra <see cref="SQLiteDataReader.Read" />
+    /// calls within the <see cref="ExecuteScalar()" /> methods should
+    /// be skipped.
+    /// </summary>
+    /// <param name="behavior">
+    /// The behavior flags, exactly as they were passed into the
+    /// <see cref="ExecuteScalar()" /> methods.
+    /// </param>
+    /// <returns>
+    /// Non-zero if the extra reads should be skipped; otherwise, zero.
+    /// </returns>
+    private bool ShouldSkipExtraReads(
+        CommandBehavior behavior /* in */
+        )
+    {
+        return (behavior & SkipExtraReads) == SkipExtraReads;
+    }
+
+    /// <summary>
+    /// Checks to see if the extra <see cref="SQLiteDataReader.Read" />
+    /// calls within the <see cref="ExecuteScalar()" /> methods should
+    /// be forced.
+    /// </summary>
+    /// <param name="behavior">
+    /// The behavior flags, exactly as they were passed into the
+    /// <see cref="ExecuteScalar()" /> methods.
+    /// </param>
+    /// <returns>
+    /// Non-zero if the extra reads should be forced; otherwise, zero.
+    /// </returns>
+    private bool ShouldForceExtraReads(
+        CommandBehavior behavior /* in */
+        )
+    {
+        return (behavior & ForceExtraReads) == ForceExtraReads;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// Attempts to combine an original <see cref="CommandBehavior" />
+    /// value with a list of new <see cref="CommandBehavior" /> values.
+    /// </summary>
+    /// <param name="behavior">
+    /// The original <see cref="CommandBehavior" /> value, if any.  If
+    /// this value is null, a suitable default value will be used.
+    /// </param>
+    /// <param name="flags">
+    /// The list of new <see cref="CommandBehavior" /> values delimited
+    /// by spaces or commas.  Each value may have an optional prefix, a
+    /// '+' or '-' sign.  If the prefix is a '+', the value is added to
+    /// the original <see cref="CommandBehavior" /> value.  If the
+    /// prefix is a '-', the value is removed from the original
+    /// <see cref="CommandBehavior" /> value.  In addition to the values
+    /// formally defined for <see cref="CommandBehavior" />, the extra
+    /// values "SkipExtraReads" and "ForceExtraReads" are recognized.
+    /// Other extra values may be added in the future.
+    /// </param>
+    /// <param name="error">
+    /// Upon success, this will be set to null.  Upon failure, this will
+    /// be set to an appropriate error message.
+    /// </param>
+    /// <returns>
+    /// The resulting <see cref="CommandBehavior" /> value -OR- null
+    /// if it cannot be determined due to an error -OR- null if the
+    /// original <see cref="CommandBehavior" /> value and list of new
+    /// <see cref="CommandBehavior" /> value are both null.  The way to
+    /// differentiate between these two null return scenarios is to
+    /// check the error message against null.  If the error message is
+    /// not null, an error was encountered; otherwise, the null was the
+    /// natural return value.
+    /// </returns>
+    public static CommandBehavior? CombineBehaviors(
+        CommandBehavior? behavior, /* in: OPTIONAL */
+        string flags,              /* in: OPTIONAL */
+        out string error           /* out */
+        )
+    {
+        error = null;
+
+        if (String.IsNullOrEmpty(flags))
+            return behavior;
+
+        string[] parts = flags.Split(' ', ',');
+
+        if (parts == null)
+        {
+            error = "could not split flags into parts";
+            return null;
+        }
+
+        CommandBehavior localBehavior = (behavior != null) ?
+            (CommandBehavior)behavior : (CommandBehavior)0;
+
+        int length = parts.Length;
+        bool add = true;
+
+        for (int index = 0; index < length; index++)
+        {
+            string part = parts[index];
+
+            if (part != null)
+                part = part.Trim();
+
+            if (String.IsNullOrEmpty(part))
+                continue;
+
+            char subPart = part[0];
+
+            if ((subPart == '+') || (subPart == '-'))
+            {
+                add = (subPart == '+');
+                part = part.Substring(1).Trim();
+            }
+
+            if (String.IsNullOrEmpty(part))
+                continue;
+
+            object enumValue;
+
+            if (String.Equals(
+                    part, "SkipExtraReads",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                enumValue = SkipExtraReads;
+            }
+            else if (String.Equals(
+                    part, "ForceExtraReads",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                enumValue = ForceExtraReads;
+            }
+            else
+            {
+                try
+                {
+                    enumValue = Enum.Parse( /* CLRv2+ */
+                        typeof(CommandBehavior), part,
+                        true); /* throw */
+                }
+                catch (Exception e)
+                {
+                    error = e.ToString();
+                    return null;
+                }
+            }
+
+            CommandBehavior flag = (CommandBehavior)enumValue;
+
+            if (add)
+                localBehavior |= flag;
+            else
+                localBehavior &= ~flag;
+        }
+
+        return localBehavior;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// Checks if extra calls to the <see cref="SQLiteDataReader.Read" />
+    /// method are necessary.  If so, it attempts to perform them.  If
+    /// not, nothing is done.
+    /// </summary>
+    /// <param name="reader">
+    /// The data reader instance as it was received from one of the
+    /// <see cref="ExecuteReader()" /> methods.
+    /// </param>
+    /// <param name="behavior">
+    /// The original command behavior flags as passed into one of the
+    /// query execution methods.
+    /// </param>
+    /// <returns>
+    /// The number of extra calls to <see cref="SQLiteDataReader.Read" />
+    /// that were performed -OR- negative one to indicate they were not
+    /// enabled.
+    /// </returns>
+    public int MaybeReadRemaining(
+        SQLiteDataReader reader, /* in */
+        CommandBehavior behavior /* in */
+        )
+    {
+        CheckDisposed();
+
+        return PrivateMaybeReadRemaining(reader, behavior);
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// Checks if extra calls to the <see cref="SQLiteDataReader.Read" />
+    /// method are necessary.  If so, it attempts to perform them.  If
+    /// not, nothing is done.
+    /// </summary>
+    /// <param name="reader">
+    /// The data reader instance as it was received from one of the
+    /// <see cref="ExecuteReader()" /> methods.
+    /// </param>
+    /// <param name="behavior">
+    /// The original command behavior flags as passed into one of the
+    /// query execution methods.
+    /// </param>
+    /// <returns>
+    /// The number of extra calls to <see cref="SQLiteDataReader.Read" />
+    /// that were performed -OR- negative one to indicate they were not
+    /// enabled.
+    /// </returns>
+    private int PrivateMaybeReadRemaining(
+        SQLiteDataReader reader, /* in */
+        CommandBehavior behavior /* in */
+        )
+    {
+        //
+        // BUGFIX: There are SQL statements that cause a write transaction
+        //         to be started and that always require more than one step
+        //         to be successfully completed, e.g. INSERT with RETURNING
+        //         clause.  Therefore, if there is a write transaction in
+        //         progress, keep stepping until done unless forbidden from
+        //         doing so by the caller.
+        //
+        if (!ShouldSkipExtraReads(behavior) &&
+            (ShouldForceExtraReads(behavior) ||
+            MatchTransactionState(SQLiteTransactionState.SQLITE_TXN_WRITE)))
+        {
+            int count = 0;
+
+            while (reader.PrivateRead(true))
+                count++;
+
+            return count;
+        }
+
+        return -1;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// Checks transaction state of the associated database connection.
+    /// </summary>
+    /// <param name="transactionState">
+    /// The desired transaction state.
+    /// </param>
+    /// <returns>
+    /// Non-zero if current transaction state of the associated database
+    /// connection matches the desired transaction state.
+    /// </returns>
+    private bool MatchTransactionState(
+        SQLiteTransactionState transactionState /* in */
+        )
+    {
+        //
+        // NOTE: The underlying sqlite3_txn_state() core library API
+        //       is not available until release 3.34.1.
+        //
+        if (UnsafeNativeMethods.sqlite3_libversion_number() < 3034001)
+            return false;
+
+        SQLiteConnection cnn = _cnn;
+
+        if (cnn == null)
+            return false;
+
+        SQLiteBase sql = _cnn._sql;
+
+        if (sql == null)
+            return false;
+
+        return sql.GetTransactionState(null) == transactionState;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
 
     /// <summary>
     /// Execute the command and return the first column of the first row of the resultset
@@ -1131,13 +1649,26 @@ namespace System.Data.SQLite
       CheckDisposed();
       SQLiteConnection.Check(_cnn);
 
+      MaybeAddGlobalCommandBehaviors(ref behavior);
+
+      object result = null;
+
       using (SQLiteDataReader reader = ExecuteReader(behavior |
           CommandBehavior.SingleRow | CommandBehavior.SingleResult))
       {
-        if (reader.Read() && (reader.FieldCount > 0))
-          return reader[0];
+        if (reader.PrivateRead(false))
+        {
+          if (reader.FieldCount > 0)
+            result = reader[0];
+
+          //
+          // BUGFIX: See PrivateMaybeReadRemaining comments.
+          //
+          PrivateMaybeReadRemaining(reader, behavior);
+        }
       }
-      return null;
+
+      return result;
     }
 
     /// <summary>
@@ -1266,6 +1797,75 @@ namespace System.Data.SQLite
     {
       CheckDisposed();
       return new SQLiteCommand(this);
+    }
+
+    /// <summary>
+    /// This method attempts to build and return a string containing diagnostic
+    /// information for use by the test suite.  This method should not be used
+    /// by application code.  It is designed for use by the test suite only and
+    /// may be modified or removed at any time.
+    /// </summary>
+    /// <returns>
+    /// A string containing information for use by the test suite -OR- null if
+    /// that information is not available.
+    /// </returns>
+    public string GetDiagnostics()
+    {
+        CheckDisposed();
+
+        StringBuilder builder = new StringBuilder();
+
+        if (_statementList != null)
+        {
+            for (int index = 0; index < _statementList.Count; index++)
+            {
+                SQLiteStatement statement = _statementList[index];
+
+                if (statement == null)
+                    continue;
+
+                builder.AppendFormat(CultureInfo.CurrentCulture,
+                    "#{0}, sql = {{{1}}}", index,
+                    statement._sqlStatement);
+
+                if (statement._prepareSchemaRetries > 0)
+                {
+                    builder.AppendFormat(CultureInfo.CurrentCulture,
+                        ", prepareSchemaRetries = {0}",
+                        statement._prepareSchemaRetries);
+                }
+
+                if (statement._prepareLockRetries > 0)
+                {
+                    builder.AppendFormat(CultureInfo.CurrentCulture,
+                        ", prepareLockRetries = {0}",
+                        statement._prepareLockRetries);
+                }
+
+                if (statement._stepSchemaRetries > 0)
+                {
+                    builder.AppendFormat(CultureInfo.CurrentCulture,
+                        ", stepSchemaRetries = {0}",
+                        statement._stepSchemaRetries);
+                }
+
+                if (statement._stepLockRetries > 0)
+                {
+                    builder.AppendFormat(CultureInfo.CurrentCulture,
+                        ", stepLockRetries = {0}",
+                        statement._stepLockRetries);
+                }
+
+#if !NET_COMPACT_20
+                builder.AppendLine();
+#else
+                builder.AppendFormat(CultureInfo.CurrentCulture,
+                    "\r\n");
+#endif
+            }
+        }
+
+        return builder.ToString();
     }
   }
 }

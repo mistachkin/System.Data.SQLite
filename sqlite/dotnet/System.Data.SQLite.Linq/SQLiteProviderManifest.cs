@@ -1,7 +1,7 @@
 /********************************************************
  * ADO.NET 2.0 Data Provider for SQLite Version 3.X
  * Written by Robert Simpson (robert@blackcastlesoft.com)
- * 
+ *
  * Released to the public domain, use at your own risk!
  ********************************************************/
 
@@ -126,7 +126,7 @@ namespace System.Data.SQLite.Linq
         string manifestToken
         )
     {
-        return SQLiteConnection.ParseConnectionString(manifestToken, false, true);
+        return SQLiteConnection.ParseConnectionString(manifestToken, false, true, false);
     }
 
     /// <summary>
@@ -160,6 +160,7 @@ namespace System.Data.SQLite.Linq
             SQLiteDateFormats.UnixEpoch.ToString(),
             SQLiteDateFormats.InvariantCulture.ToString(),
             SQLiteDateFormats.CurrentCulture.ToString(),
+            SQLiteDateFormats.Binary.ToString(),
             "Default"
         };
 #endif
@@ -225,7 +226,7 @@ namespace System.Data.SQLite.Linq
     }
 
     /// <summary>
-    /// This method takes a type and a set of facets and returns the best mapped equivalent type 
+    /// This method takes a type and a set of facets and returns the best mapped equivalent type
     /// in EDM.
     /// </summary>
     /// <param name="storeType">A TypeUsage encapsulating a store type and a set of facets</param>
@@ -250,7 +251,7 @@ namespace System.Data.SQLite.Linq
       //}
 
       PrimitiveType edmPrimitiveType;
-      
+
       if (base.StoreTypeNameToEdmPrimitiveType.TryGetValue(storeTypeName, out edmPrimitiveType) == false)
         throw new ArgumentException(String.Format("SQLite does not support the type '{0}'.", storeTypeName));
 
@@ -347,7 +348,7 @@ namespace System.Data.SQLite.Linq
     }
 
     /// <summary>
-    /// This method takes a type and a set of facets and returns the best mapped equivalent type 
+    /// This method takes a type and a set of facets and returns the best mapped equivalent type
     /// </summary>
     /// <param name="edmType">A TypeUsage encapsulating an EDM type and a set of facets</param>
     /// <returns>A TypeUsage encapsulating a store type and a set of facets</returns>

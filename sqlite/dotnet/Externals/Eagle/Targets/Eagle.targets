@@ -1437,18 +1437,26 @@
               well.  The "supported", yet sub-optimal, alternative appears to
               be using the TargetFrameworkSDKToolsDirectory variable.
     -->
-    <GetFrameworkSDKPath Condition="'$(SDK35ToolsPath)' == '' And
+    <GetFrameworkSDKPath Condition="'$(MtToolDir)' == '' And
+                                    '$(SDK35ToolsPath)' == '' And
                                     '$(WindowsSDK80Path)' == ''">
       <Output TaskParameter="Path"
               PropertyName="DirForManifestTool" />
     </GetFrameworkSDKPath>
 
-    <Exec Condition="'$(SDK35ToolsPath)' != '' And
+    <Exec Condition="'$(MtToolDir)' != '' And
+                     HasTrailingSlash('$(MtToolDir)') And
+                     Exists('$(MtToolDir)mt.exe')"
+          Command="&quot;$(MtToolDir)mt.exe&quot; -manifest &quot;$(MSBuildProjectDirectory)\Resources\manifest.xml&quot; -outputresource:&quot;$(TargetPath)&quot;;1" />
+
+    <Exec Condition="'$(MtToolDir)' == '' And
+                     '$(SDK35ToolsPath)' != '' And
                      HasTrailingSlash('$(SDK35ToolsPath)') And
                      Exists('$(SDK35ToolsPath)mt.exe')"
           Command="&quot;$(SDK35ToolsPath)mt.exe&quot; -manifest &quot;$(MSBuildProjectDirectory)\Resources\manifest.xml&quot; -outputresource:&quot;$(TargetPath)&quot;;1" />
 
-    <Exec Condition="('$(SDK35ToolsPath)' == '' Or
+    <Exec Condition="'$(MtToolDir)' == '' And
+                     ('$(SDK35ToolsPath)' == '' Or
                       !HasTrailingSlash('$(SDK35ToolsPath)') Or
                       !Exists('$(SDK35ToolsPath)mt.exe')) And
                      '$(WindowsSDK80Path)' == '' And
@@ -1457,7 +1465,8 @@
                      Exists('$(DirForManifestTool)bin\mt.exe')"
           Command="&quot;$(DirForManifestTool)bin\mt.exe&quot; -manifest &quot;$(MSBuildProjectDirectory)\Resources\manifest.xml&quot; -outputresource:&quot;$(TargetPath)&quot;;1" />
 
-    <Exec Condition="('$(SDK35ToolsPath)' == '' Or
+    <Exec Condition="'$(MtToolDir)' == '' And
+                     ('$(SDK35ToolsPath)' == '' Or
                       !HasTrailingSlash('$(SDK35ToolsPath)') Or
                       !Exists('$(SDK35ToolsPath)mt.exe')) And
                      '$(WindowsSDK80Path)' != '' And
@@ -2618,6 +2627,19 @@
 
   <!--
   ******************************************************************************
+  -->
+
+  <Target Name="ProjectBuildOutputIsLocked"
+          Condition="'$(ProjectName)' != ''">
+    <CreateProperty Value="true">
+      <Output TaskParameter="Value" PropertyName="SkipCopyToOutputDirectory" />
+    </CreateProperty>
+
+    <Warning Text="The project &quot;$(ProjectName)&quot; build output is locked, skipping..." />
+  </Target>
+
+  <!--
+  ******************************************************************************
   **                      Eagle Library Specific Targets                      **
   ******************************************************************************
   -->
@@ -2675,6 +2697,7 @@
                          ..\lib\Eagle1.0\exec.eagle;
                          ..\lib\Eagle1.0\file1.eagle;
                          ..\lib\Eagle1.0\file2.eagle;
+                         ..\lib\Eagle1.0\file2u.eagle;
                          ..\lib\Eagle1.0\file3.eagle;
                          ..\lib\Eagle1.0\info.eagle;
                          ..\lib\Eagle1.0\list.eagle;
@@ -2695,7 +2718,9 @@
                          ..\lib\Eagle1.0\test.eagle;
                          ..\lib\Eagle1.0\vendor.eagle;
                          ..\lib\Eagle1.0\word.tcl;
-                         ..\lib\Eagle1.0\pkgIndex.eagle">
+                         ..\lib\Eagle1.0\pkgIndex.eagle;
+                         ..\Example\Scripts\tetris.tcl;
+                         ..\Example\Scripts\tetris.tcl.harpy">
       <Output ItemName="LibraryResourceFilesItem" TaskParameter="Include" />
     </CreateItem>
   </Target>
@@ -2758,6 +2783,43 @@
           Outputs="Resources\packages.resources">
     <Exec Condition="Exists('Resources\packages.resources')"
           Command="&quot;$(SystemRoot)\System32\attrib.exe&quot; -r Resources\packages.resources" />
+  </Target>
+
+  <!--
+  ******************************************************************************
+  -->
+
+  <!--
+      NOTE: *WARNING* Be sure to update the "Inputs" attribute for the targets
+            EagleKitResGen* in this file and the list of files in the file
+            "Kit\Resources\kit.resx" if any files are added to the core script
+            packages.
+  -->
+  <Target Name="EagleKitResourceFiles">
+    <CreateItem Include="..\lib\Kit1.0\pkgIndex.eagle;
+                         ..\lib\Kit1.0\pkgIndex.eagle.harpy">
+      <Output ItemName="KitResourceFilesItem" TaskParameter="Include" />
+    </CreateItem>
+  </Target>
+
+  <!--
+  ******************************************************************************
+  -->
+
+  <Target Name="EagleKitResGenUnsetReadOnly"
+          Condition="('$(EagleKitResGen)' != 'false' Or
+                      '$(EagleKitResGenExternals)' != 'false' Or
+                      '$(EagleKitResGenForNetStandard2X)' != 'false') And
+                     '$(EagleUnsetReadOnly)' != 'false' And
+                     '$(OperatingSystem)' == 'Windows' And
+                     '$(EagleEmbeddedLibrary)' != 'false' And
+                     '$(SystemRoot)' != '' And
+                     !HasTrailingSlash('$(SystemRoot)') And
+                     Exists('$(SystemRoot)\System32\attrib.exe')"
+          Inputs="Resources\kit.resx;@(KitResourceFilesItem)"
+          Outputs="Resources\kit.resources">
+    <Exec Condition="Exists('Resources\kit.resources')"
+          Command="&quot;$(SystemRoot)\System32\attrib.exe&quot; -r Resources\kit.resources" />
   </Target>
 
   <!--
@@ -2924,6 +2986,55 @@
 
   <!--
   ******************************************************************************
+  -->
+
+  <Target Name="EagleKitResGen"
+          Condition="'$(EagleKitResGen)' != 'false' And
+                     '$(EagleEmbeddedLibrary)' != 'false'"
+          Inputs="Resources\kit.resx;@(KitResourceFilesItem)"
+          Outputs="Resources\kit.resources">
+    <GenerateResource Sources="Resources\kit.resx"
+                      OutputResources="Resources\kit.resources" />
+  </Target>
+
+  <!--
+  ******************************************************************************
+  -->
+
+  <Target Name="EagleKitResGenExternals"
+          Condition="'$(EagleKitResGen)' == 'false' And
+                     '$(EagleKitResGenExternals)' != 'false' And
+                     '$(EagleEmbeddedLibrary)' != 'false' And
+                     ((('$(MSBuildToolsVersion)' == '4.0' Or
+                        '$(MSBuildToolsVersion)' == '12.0' Or
+                        '$(MSBuildToolsVersion)' == '14.0' Or
+                        '$(MSBuildToolsVersion)' == '15.0' Or
+                        '$(MSBuildToolsVersion)' == 'Current') And
+                       '$(TargetFrameworkVersion)' == '') Or
+                      '$(TargetFrameworkVersion)' == 'v4.0' Or
+                      '$(TargetFrameworkVersion)' == 'v4.5' Or
+                      '$(TargetFrameworkVersion)' == 'v4.5.1' Or
+                      '$(TargetFrameworkVersion)' == 'v4.5.2' Or
+                      '$(TargetFrameworkVersion)' == 'v4.6' Or
+                      '$(TargetFrameworkVersion)' == 'v4.6.1' Or
+                      '$(TargetFrameworkVersion)' == 'v4.6.2' Or
+                      '$(TargetFrameworkVersion)' == 'v4.7' Or
+                      '$(TargetFrameworkVersion)' == 'v4.7.1' Or
+                      '$(TargetFrameworkVersion)' == 'v4.7.2' Or
+                      '$(TargetFrameworkVersion)' == 'v4.8' Or
+                      '$(TargetFrameworkVersion)' == 'v4.8.1') And
+                     '$(EagleDir)' != '' And
+                     !HasTrailingSlash('$(EagleDir)') And
+                     Exists('$(EagleDir)\Externals\NETFX\Tools\v4.0\ResGen.exe')"
+          Inputs="Resources\kit.resx;@(KitResourceFilesItem)"
+          Outputs="Resources\kit.resources">
+    <GenerateResource Sources="Resources\kit.resx"
+                      OutputResources="Resources\kit.resources"
+                      SdkToolsPath="$(EagleDir)\Externals\NETFX\Tools\v4.0" />
+  </Target>
+
+  <!--
+  ******************************************************************************
   **                       Eagle Test Specific Targets                        **
   ******************************************************************************
   -->
@@ -2974,5 +3085,56 @@
 
     <Touch AlwaysCreate="true"
            Files="$(TargetPath).RunTests.done" />
+  </Target>
+
+  <!--
+  ******************************************************************************
+  -->
+
+  <Import Condition="'$(EagleTaskTargets)' != 'false' And
+                     '$(EagleTaskPath)' != '' And
+                     HasTrailingSlash('$(EagleTaskPath)') And
+                     Exists('$(EagleTaskPath)Eagle.tasks')"
+          Project="$(EagleTaskPath)Eagle.tasks" />
+
+  <!--
+  ******************************************************************************
+  -->
+
+  <Target Name="LockBuildOutputDirectories">
+    <EvaluateFile Condition="'$(BuildTool)' == 'MSBuild' And
+                             '$(EagleLibraryDir)' != '' And
+                             HasTrailingSlash('$(EagleLibraryDir)') And
+                             Exists('$(EagleLibraryDir)Tools\lockBuild.eagle') And
+                             '$(EagleTaskPath)' != '' And
+                             HasTrailingSlash('$(EagleTaskPath)') And
+                             Exists('$(EagleTaskPath)EagleShell.exe') And
+                             !Exists('$(EagleLibraryDir)..\Service\bin\LOCKED')"
+                  Args="true" Text="$(EagleLibraryDir)Tools\lockBuild.eagle">
+      <Output TaskParameter="Code" PropertyName="LockBuildOutputCode" />
+      <Output TaskParameter="Result" PropertyName="LockBuildOutputResult" />
+    </EvaluateFile>
+
+    <Message Text="LockBuildOutputDirectories: $(LockBuildOutputCode) $(LockBuildOutputResult)" />
+  </Target>
+
+  <!--
+  ******************************************************************************
+  -->
+
+  <Target Name="UnlockBuildOutputDirectories">
+    <EvaluateFile Condition="'$(BuildTool)' == 'MSBuild' And
+                             '$(EagleLibraryDir)' != '' And
+                             HasTrailingSlash('$(EagleLibraryDir)') And
+                             Exists('$(EagleLibraryDir)Tools\lockBuild.eagle') And
+                             '$(EagleTaskPath)' != '' And
+                             HasTrailingSlash('$(EagleTaskPath)') And
+                             Exists('$(EagleTaskPath)EagleShell.exe')"
+                  Args="false" Text="$(EagleLibraryDir)Tools\lockBuild.eagle">
+      <Output TaskParameter="Code" PropertyName="UnlockBuildOutputCode" />
+      <Output TaskParameter="Result" PropertyName="UnlockBuildOutputResult" />
+    </EvaluateFile>
+
+    <Message Text="UnlockBuildOutputDirectories: $(UnlockBuildOutputCode) $(UnlockBuildOutputResult)" />
   </Target>
 </Project>

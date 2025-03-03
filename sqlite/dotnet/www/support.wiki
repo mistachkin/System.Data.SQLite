@@ -1,0 +1,122 @@
+<title>Support</title>
+
+<div align="center"><h2><b>Community Support Policies</b></h2></div>
+<div align="center"><h3><b>Effective May 1, 2017</b></h3></div>
+<div align="center"><h3><b>Updated May 22, 2021</b></h3></div>
+
+<h4>Legacy CryptoAPI-based (RC4) Codec</h4>
+
+<ul>
+  <li>
+    It is unsupported.
+  </li>
+  <li>
+    It is disabled in all default build configurations.
+  </li>
+  <li>
+    It may not be possible to build binaries with it enabled.
+  </li>
+</ul>
+
+<h4>Design-Time Components for Visual Studio</h4>
+
+<ul>
+  <li>
+    They will still be built and included in the release packages.
+  </li>
+  <li>
+    However, they will no longer be &quot;officially supported&quot;.
+  </li>
+  <li>
+    The forum may still be used to ask questions about them.
+  </li>
+  <li>
+    However, any tickets opened for them will be deleted.
+  </li>
+  <li>
+    Due to
+    <a href="https://docs.microsoft.com/en-us/visualstudio/extensibility/breaking-changes-2017">changes</a>
+    in the Visual Studio package installation model, they are not
+    supported by Visual Studio 2017 and later versions.
+  </li>
+</ul>
+
+<h4>Release Packages</h4>
+
+<ul>
+  <li>
+    Release packages for non-current releases will be archived.
+  </li>
+  <li>
+    Access to archived release packages will be granted on a case-by-case basis.
+  </li>
+</ul>
+
+<div align="center"><h2><b>Forum</b></h2></div>
+
+<p>
+  SQLite has an active forum and support community and users of the
+  System.Data.SQLite project available on this web site are encouraged to
+  use these for support questions.
+</p>
+
+<p>
+  The <a href="https://sqlite.org/forum/forum">SQLite Forum</a> has been
+  established to help support SQLite and System.Data.SQLite.
+</p>
+
+<p>
+  Off-site archives of the (legacy) <b>sqlite-users</b> mailing list are
+  available at:
+</p>
+
+<ul>
+  <li>
+    <a href="https://www.mail-archive.com/sqlite-users%40sqlite.org/">
+    https://www.mail-archive.com/sqlite-users%40sqlite.org/</a>
+    (<b>old address, before mid-February 2015</b>)
+  </li>
+
+  <li>
+    <a href="https://www.mail-archive.com/sqlite-users%40mailinglists.sqlite.org/">
+    https://www.mail-archive.com/sqlite-users%40mailinglists.sqlite.org/</a>
+    (<b>new address, after mid-February 2015</b>)
+  </li>
+
+  <li>
+    <a href="https://marc.info/?l=sqlite-users&r=1&w=2">
+    https://marc.info/?l=sqlite-users&r=1&w=2</a>
+  </li>
+
+  <li>
+    <a href="http://news.gmane.org/gmane.comp.db.sqlite.general">
+    http://news.gmane.org/gmane.comp.db.sqlite.general</a>
+  </li>
+</ul>
+
+<div align="center"><h2><b>Direct E-Mail</b></h2></div>
+
+<p>
+  Use the <a href="https://sqlite.org/forum/forum">SQLite Forum</a>.
+  Please do <b>not</b> send email directly to the authors of SQLite
+  or System.Data.SQLite unless:
+</p>
+
+<ul>
+  <li>
+    You have or intend to acquire a
+    <a href="https://www.sqlite.org/support.html">
+    professional support contract</a>.
+  </li>
+
+  <li>
+    You are working on an open source project.
+  </li>
+</ul>
+
+<p>
+  You are welcomed to use SQLite and System.Data.SQLite in closed source,
+  proprietary, and/or commercial projects and to ask questions about such
+  use on the forum.  But please do not ask to receive free direct technical
+  support. The software is free; direct technical support is not.
+</p>
