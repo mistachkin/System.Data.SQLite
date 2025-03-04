@@ -8,7 +8,7 @@
 
 ----
 
-This is the official GitHub mirror for the [System.Data.SQLite project](https://system.data.sqlite.org/).
+This is an unofficial GitHub mirror for the [System.Data.SQLite project](https://system.data.sqlite.org/).
 
 The current development version can be downloaded from [https://system.data.sqlite.org/index.html/timeline?y=ci](https://system.data.sqlite.org/index.html/timeline?y=ci)
 
