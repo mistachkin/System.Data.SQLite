@@ -12,7 +12,7 @@ IF NOT DEFINED APPID (
 )
 
 IF NOT DEFINED URL (
-  SET URL=https://system.data.sqlite.org/
+  SET URL=https://urn.to/r/sds
 )
 
 IF NOT DEFINED PUBLICKEY (

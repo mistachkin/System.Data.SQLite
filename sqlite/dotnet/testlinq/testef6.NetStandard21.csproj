@@ -55,6 +55,7 @@
   -->
 
   <PropertyGroup>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>False</Deterministic>

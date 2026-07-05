@@ -2699,6 +2699,16 @@ namespace eval ::Eagle {
             $add System.Transactions.dll]
 
         #
+        # NOTE: If the Eagle core library includes TIP #237 functionality
+        #       (i.e. arbitrary precision integer support) is available,
+        #       make sure the System.Numerics assembly reference is added
+        #       to the C# compilation command as well.
+        #
+        if {[haveConstraint tip237]} then {
+          lappend command $add System.Numerics.dll
+        }
+
+        #
         # NOTE: Add all the provided file names as assembly references.
         #
         foreach fileName $fileNames {
@@ -5419,8 +5429,7 @@ namespace eval ::Eagle {
         #
         # NOTE: Check for TLS protocol support, e.g. TLS 1.2, etc.
         #
-        checkForTlsOk \
-            $::test_channel [list system.data.sqlite.org] $::test_timeout
+        checkForTlsOk $::test_channel [list urn.to] $::test_timeout
 
         if {[haveConstraint tlsOk]} then {
           addConstraint sdsTlsOk

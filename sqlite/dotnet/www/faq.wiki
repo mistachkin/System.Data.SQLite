@@ -589,7 +589,7 @@
   All System.Data.SQLite objects that implement IDisposable, either directly or
   indirectly, should be explicitly disposed when they are no longer needed.  If
   this is the case and you are still seeing a leak of some kind, please file a
-  <a href="/index.html/tktnew">ticket</a>.
+  <a href="/tktnew">ticket</a>.
 </p>
 
 <hr>
@@ -660,21 +660,21 @@
 <p>
   If any behavior is observed that appears to be a bug, it may be reported via
   the <a href="https://sqlite.org/forum/forum">SQLite Forum</a> or by filing a
-  <a href="/index.html/tktnew">ticket</a>.  Prior to taking one of these steps,
+  <a href="/tktnew">ticket</a>.  Prior to taking one of these steps,
   it is always prudent to check the various lists of previously filed tickets
   to see if the behavior being observed has already been reported and possibly
   fixed in a subsequent release.
   <ol>
-    <li><a href="/index.html/rptview?rn=6">
+    <li><a href="/rptview?rn=6">
       The list of tickets actively being worked on.
     </a></li>
-    <li><a href="/index.html/rptview?rn=2">
+    <li><a href="/rptview?rn=2">
       The list of tickets currently open.
     </a></li>
-    <li><a href="/index.html/rptview?rn=4">
+    <li><a href="/rptview?rn=4">
       The list of tickets fixed and then closed.
     </a></li>
-    <li><a href="/index.html/rptview?rn=7">
+    <li><a href="/rptview?rn=7">
       The list of tickets closed without needing a fix.
     </a></li>
   </ol>

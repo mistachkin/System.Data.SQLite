@@ -114,7 +114,7 @@ IF NOT EXIST "%ROOT%\Setup\Output" (
 )
 
 IF NOT DEFINED LINUX_URI (
-  SET LINUX_URI=https://system.data.sqlite.org/index.html/uv/%NUGET_VERSION%/linux-x64/SQLite.Interop.dll
+  SET LINUX_URI=https://urn.to/r/sds/uv/%NUGET_VERSION%/linux-x64/SQLite.Interop.dll
 )
 
 IF NOT DEFINED LINUX_DIRECTORY (
@@ -125,7 +125,7 @@ IF NOT DEFINED LINUX_DIRECTORY (
 %_VECHO% LinuxDirectory = '%LINUX_DIRECTORY%'
 
 IF NOT DEFINED MACOS_URI (
-  SET MACOS_URI=https://system.data.sqlite.org/index.html/uv/%NUGET_VERSION%/osx-x64/SQLite.Interop.dll
+  SET MACOS_URI=https://urn.to/r/sds/uv/%NUGET_VERSION%/osx-x64/SQLite.Interop.dll
 )
 
 IF NOT DEFINED MACOS_DIRECTORY (

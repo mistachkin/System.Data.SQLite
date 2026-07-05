@@ -12,7 +12,7 @@
 **
 ** This SQLite extension implements functions that compute SHA3 hashes
 ** in the way described by the (U.S.) NIST FIPS 202 SHA-3 Standard.
-** Two SQL functions are implemented:
+** Three SQL functions are implemented:
 **
 **     sha3(X,SIZE)
 **     sha3_agg(Y,SIZE)
@@ -64,7 +64,7 @@
 **
 **    typeof(Y)='blob'         The hash is taken over prefix "Bnnn:" followed
 **                             by the binary content of the blob.  The "nnn"
-**                             in the prefix is the mimimum-length decimal
+**                             in the prefix is the minimum-length decimal
 **                             representation of the byte-length of the blob.
 **
 ** According to the rules above, all of the following SELECT statements

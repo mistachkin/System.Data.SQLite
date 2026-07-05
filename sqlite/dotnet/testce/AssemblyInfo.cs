@@ -13,9 +13,9 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("System.Data.SQLite Tester for Windows CE")]
 [assembly: AssemblyDescription("ADO.NET Data Provider for SQLite")]
-[assembly: AssemblyCompany("https://system.data.sqlite.org/")]
+[assembly: AssemblyCompany("https://www.mistachkin.com/")]
 [assembly: AssemblyProduct("System.Data.SQLite")]
-[assembly: AssemblyCopyright("Public Domain")]
+[assembly: AssemblyCopyright("Copyright © 2007-2012 by Joe Mistachkin.  All rights reserved.")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -38,5 +38,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.119.0")]
-// [assembly: AssemblyFileVersion("1.0.119.0")]
+[assembly: AssemblyVersion("1.0.120.0")]
+// [assembly: AssemblyFileVersion("1.0.120.0")]

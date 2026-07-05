@@ -51,7 +51,12 @@ body {
 a { color: #044a64 }
 a:visited { color: #734559 }
 
-.logo { float: left; margin:1px; }
+.logo {
+  float: left;
+  margin:1px;
+  width: 200px;
+  height: 101px;
+}
 .tagline {
   float:right;
   text-align:right;
@@ -163,7 +168,7 @@ a:visited { color: #734559 }
 .fancy th, .fancy td {padding: 0.2em 1ex; vertical-align:top}
 .toct { color: #044a64 ! important; }
 #toc_sub a        { color: #044a64; text-decoration: none }
-#toc_sub { display: none; margin-top: 1em; }
+#toc_sub { margin-top: 1em; }
 .fancy .todo         { color: #AA3333 ; font-style : italic }
 .fancy .todo:before  { content: 'TODO:' }
 .fancy p.todo        { border: solid #AA3333 1px; padding: 1ex }
@@ -177,7 +182,8 @@ a:visited { color: #734559 }
 .fancy_toc {
   margin-top: 1em;
 }
-.fancy_toc > a {
+.fancy_toc > a,
+.fancy_toc > summary {
   margin: 1em;
   margin-left: 0;
   font-size: 1.5em;

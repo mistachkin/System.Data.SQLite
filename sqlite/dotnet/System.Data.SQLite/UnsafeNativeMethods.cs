@@ -3372,7 +3372,7 @@ namespace System.Data.SQLite
     //       System.Data.SQLite functionality (e.g. being able to bind
     //       parameters and handle column values of types Int64 and Double).
     //
-    internal const string SQLITE_DLL = "SQLite.Interop.119.dll";
+    internal const string SQLITE_DLL = "SQLite.Interop.120.dll";
 #elif SQLITE_STANDARD
     //
     // NOTE: Otherwise, if the standard SQLite library is enabled, use it.
@@ -4403,43 +4403,57 @@ namespace System.Data.SQLite
     internal static extern int sqlite3_limit(IntPtr db, SQLiteLimitOpsEnum op, int value);
 
     // Since sqlite3_config() takes a variable argument list, we have to overload declarations
-    // for all possible calls that we want to use.
-#if !PLATFORM_COMPACTFRAMEWORK
+    // for all possible calls that we want to use.  When not using the standard SQLite library,
+    // non-varargs interop wrappers are used to avoid platform-specific ABI issues with P/Invoking
+    // C variadic functions.
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config_none_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config")]
 #endif
     internal static extern SQLiteErrorCode sqlite3_config_none(SQLiteConfigOpsEnum op);
 
-#if !PLATFORM_COMPACTFRAMEWORK
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config_int_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config")]
 #endif
     internal static extern SQLiteErrorCode sqlite3_config_int(SQLiteConfigOpsEnum op, int value);
 
-#if !PLATFORM_COMPACTFRAMEWORK
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config_log_callback_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config", CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_config")]
 #endif
     internal static extern SQLiteErrorCode sqlite3_config_log(SQLiteConfigOpsEnum op, SQLiteLogCallback func, IntPtr pvUser);
 
-#if !PLATFORM_COMPACTFRAMEWORK
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config_charptr_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config")]
 #endif
     internal static extern SQLiteErrorCode sqlite3_db_config_charptr(IntPtr db, SQLiteConfigDbOpsEnum op, IntPtr charPtr);
 
-#if !PLATFORM_COMPACTFRAMEWORK
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config_int_refint_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config")]
 #endif
     internal static extern SQLiteErrorCode sqlite3_db_config_int_refint(IntPtr db, SQLiteConfigDbOpsEnum op, int value, ref int result);
 
-#if !PLATFORM_COMPACTFRAMEWORK
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config_intptr_two_ints_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config", CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_db_config")]
@@ -4553,8 +4567,12 @@ namespace System.Data.SQLite
 
     // Since sqlite3_log() takes a variable argument list, we have to overload declarations
     // for all possible calls.  For now, we are only exposing a single string, and
-    // depend on the caller to format the string.
-#if !PLATFORM_COMPACTFRAMEWORK
+    // depend on the caller to format the string.  When not using the standard SQLite
+    // library, a non-varargs interop wrapper is used that also safely passes the
+    // message via "%s" to prevent format string interpretation.
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_log_interop")]
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 #else
     [DllImport(SQLITE_DLL)]
@@ -4645,12 +4663,19 @@ namespace System.Data.SQLite
 #endif
     internal static extern SQLiteErrorCode sqlite3_declare_vtab(IntPtr db, IntPtr zSQL);
 
-#if !PLATFORM_COMPACTFRAMEWORK
+    // When not using the standard SQLite library, a non-varargs interop wrapper is
+    // used.  NOTE: The interop wrapper only handles the no-extra-arguments case
+    // (the format string is passed via "%s" to prevent format string interpretation).
+#if !SQLITE_STANDARD
+    [DllImport(SQLITE_DLL, EntryPoint = "sqlite3_mprintf_interop")]
+    internal static extern IntPtr sqlite3_mprintf(IntPtr format);
+#elif !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
+    internal static extern IntPtr sqlite3_mprintf(IntPtr format, __arglist);
 #else
     [DllImport(SQLITE_DLL)]
-#endif
     internal static extern IntPtr sqlite3_mprintf(IntPtr format, __arglist);
+#endif
 
 #if !PLATFORM_COMPACTFRAMEWORK
     [DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]

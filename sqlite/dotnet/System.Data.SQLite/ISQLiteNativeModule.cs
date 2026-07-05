@@ -71,7 +71,7 @@ namespace System.Data.SQLite
         /// defines the columns in the virtual table and their data types. 
         /// The name of the table in this CREATE TABLE statement is ignored, 
         /// as are all constraints. Only the column names and datatypes matter.
-        /// The CREATE TABLE statement string need not to be 
+        /// The CREATE TABLE statement string need not be 
         /// held in persistent memory.  The string can be
         /// deallocated and/or reused as soon as the sqlite3_declare_vtab()
         /// routine returns.
@@ -125,7 +125,7 @@ namespace System.Data.SQLite
         /// <para>
         /// If a column datatype contains the special keyword "HIDDEN"
         /// (in any combination of upper and lower case letters) then that keyword
-        /// it is omitted from the column datatype name and the column is marked 
+        /// is omitted from the column datatype name and the column is marked 
         /// as a hidden column internally. 
         /// A hidden column differs from a normal column in three respects:
         /// </para>
@@ -417,10 +417,10 @@ namespace System.Data.SQLite
         /// };
         /// </code></para>
         /// <para>
-        /// Note the warnings on the "estimatedRows", "idxFlags", and colUsed fields.
+        /// Note the warnings on the "estimatedRows", "idxFlags", and "colUsed" fields.
         /// These fields were added with SQLite versions 3.8.2, 3.9.0, and 3.10.0, respectively. 
         /// Any extension that reads or writes these fields must first check that the 
-        /// version of the SQLite library in use is greater than or equal to appropriate
+        /// version of the SQLite library in use is greater than or equal to the appropriate
         /// version - perhaps comparing the value returned from sqlite3_libversion_number()
         /// against constants 3008002, 3009000, and/or 3010000. The result of attempting 
         /// to access these fields in an sqlite3_index_info structure created by an 
@@ -659,7 +659,7 @@ namespace System.Data.SQLite
         /// </para>
         /// <para>
         /// Given all of the information above, the job of the xBestIndex 
-        /// method it to figure out the best way to search the virtual table.
+        /// method is to figure out the best way to search the virtual table.
         /// </para>
         /// <para>
         /// The xBestIndex method conveys an indexing strategy to the xFilter 
@@ -723,8 +723,8 @@ namespace System.Data.SQLite
         /// the EXPR value of the aConstraint[3] constraint.
         /// </para>
         /// <para>
-        /// By default, the SQLite generates bytecode that will double
-        /// checks all constraints on each row of the virtual table to verify
+        /// By default, the SQLite generates bytecode that will double-check
+        /// all constraints on each row of the virtual table to verify
         /// that they are satisfied.  If the virtual table can guarantee
         /// that a constraint will always be satisfied, it can try to
         /// suppress that double-check by setting aConstraintUsage[].omit.
@@ -809,7 +809,7 @@ namespace System.Data.SQLite
         /// The aConstraint[].usable value for a required parameter is
         /// false <big>&#8594;</big> return SQLITE_CONSTRAINT.
         /// <![CDATA[</li>]]><![CDATA[<li>]]>
-        /// A required parameter does not appears anywhere in
+        /// A required parameter does not appear anywhere in
         /// the aConstraint[] array <big>&#8594;</big>
         /// Set an error message in pVTab-&gt;zErrMsg and return
         /// SQLITE_ERROR
@@ -1033,16 +1033,16 @@ namespace System.Data.SQLite
         /// that meaning is.
         /// </para>
         /// <para>
-        /// The xBestIndex function may have requested the values of 
-        /// certain expressions using the aConstraintUsage[].argvIndex values 
+        /// The xBestIndex function may have requested the values of
+        /// certain expressions using the aConstraintUsage[].argvIndex values
         /// of the sqlite3_index_info structure. 
         /// Those values are passed to xFilter using the argc and argv parameters.
         /// </para>
         /// <para>
         /// If the virtual table contains one or more rows that match the
-        /// search criteria, then the cursor must be left point at the first row.
+        /// search criteria, then the cursor must be left pointing at the first row.
         /// Subsequent calls to xEof must return false (zero).
-        /// If there are no rows match, then the cursor must be left in a state 
+        /// If there are no rows matching, then the cursor must be left in a state
         /// that will cause the xEof to return true (non-zero).
         /// The SQLite engine will use
         /// the xColumn and xRowid methods to access that row content.
@@ -1155,7 +1155,7 @@ namespace System.Data.SQLite
         /// the N-th column of the current row. N is zero-based so the first column 
         /// is numbered 0. 
         /// The xColumn method may return its result back to SQLite using one of the
-        /// following interface:
+        /// following interfaces:
         /// </para>
         /// <para>
         /// <![CDATA[<ul>]]>
@@ -1404,7 +1404,7 @@ namespace System.Data.SQLite
         /// </code></para>
         /// <para>
         /// This method begins a transaction on a virtual table.
-        /// This is method is optional.  The xBegin pointer of sqlite3_module
+        /// This method is optional.  The xBegin pointer of sqlite3_module
         /// may be NULL.
         /// </para>
         /// <para>
@@ -1436,11 +1436,11 @@ namespace System.Data.SQLite
         /// <para>
         /// This method signals the start of a two-phase commit on a virtual
         /// table.
-        /// This is method is optional.  The xSync pointer of sqlite3_module
+        /// This method is optional.  The xSync pointer of sqlite3_module
         /// may be NULL.
         /// </para>
         /// <para>
-        /// This method is only invoked after call to the xBegin method and
+        /// This method is only invoked after a call to the xBegin method and
         /// prior to an xCommit or xRollback.  In order to implement two-phase
         /// commit, the xSync method on all virtual tables is invoked prior to
         /// invoking the xCommit method on any virtual table.  If any of the 
@@ -1465,7 +1465,7 @@ namespace System.Data.SQLite
         /// </code></para>
         /// <para>
         /// This method causes a virtual table transaction to commit.
-        /// This is method is optional.  The xCommit pointer of sqlite3_module
+        /// This method is optional.  The xCommit pointer of sqlite3_module
         /// may be NULL.
         /// </para>
         /// <para>
@@ -1491,7 +1491,7 @@ namespace System.Data.SQLite
         /// </code></para>
         /// <para>
         /// This method causes a virtual table transaction to rollback.
-        /// This is method is optional.  The xRollback pointer of sqlite3_module
+        /// This method is optional.  The xRollback pointer of sqlite3_module
         /// may be NULL.
         /// </para>
         /// <para>
@@ -1539,7 +1539,7 @@ namespace System.Data.SQLite
         /// <para>
         /// Historically, the return value from xFindFunction() was either zero
         /// or one.  Zero means that the function is not overloaded and one means that
-        /// it is overload.  The ability to return values of 
+        /// it is overloaded.  The ability to return values of 
         /// SQLITE_INDEX_CONSTRAINT_FUNCTION or greater was added in
         /// version 3.25.0 (2018-09-15).  If xFindFunction returns
         /// SQLITE_INDEX_CONSTRAINT_FUNCTION or greater, than means that the function
@@ -1572,7 +1572,7 @@ namespace System.Data.SQLite
         /// Note that infix functions (LIKE, GLOB, REGEXP, and MATCH) reverse 
         /// the order of their arguments. So "like(A,B)" would normally work the same
         /// as "B like A".
-        /// However, xFindFunction() always looks a the left-most argument, not
+        /// However, xFindFunction() always looks at the left-most argument, not
         /// the first logical argument.
         /// Hence, for the form "B like A", SQLite looks at the
         /// left operand "B" and if that operand is a virtual table column
@@ -1623,8 +1623,8 @@ namespace System.Data.SQLite
         /// int (*xRename)(sqlite3_vtab *pVtab, const char *zNew);
         /// </code></para>
         /// <para>
-        /// This method provides notification that the virtual table implementation
-        /// that the virtual table will be given a new name. 
+        /// This method notifies the virtual table implementation
+        /// that the virtual table will be given a new name.
         /// If this method returns SQLITE_OK then SQLite renames the table.
         /// If this method returns an error code then the renaming is prevented.
         /// </para>

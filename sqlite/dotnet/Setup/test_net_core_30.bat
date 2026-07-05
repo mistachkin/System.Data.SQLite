@@ -65,7 +65,7 @@ IF NOT DEFINED DOTNET (
 %_VECHO% DotNet = '%DOTNET%'
 
 IF NOT DEFINED SUBCOMMANDS (
-  SET SUBCOMMANDS=exec
+  SET SUBCOMMANDS=exec --roll-forward Major
 )
 
 %_VECHO% SubCommands = '%SUBCOMMANDS%'
@@ -142,7 +142,9 @@ REM ****************************************************************************
 
 SET VSCMD_SKIP_SENDTELEMETRY=1
 SET VCPKG_KEEP_ENV_VARS=VSCMD_SKIP_SENDTELEMETRY
+SET VCPKG_DISABLE_METRICS=1
 SET DOTNET_CLI_TELEMETRY_OPTOUT=1
+SET DOTNET_SCAFFOLD_TELEMETRY_OPTOUT=1
 
 REM ****************************************************************************
 REM **************************** Run the Test Suite ****************************

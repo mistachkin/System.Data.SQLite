@@ -9,7 +9,7 @@
 <body>
 <div class=nosearch>
 <a href="index.html">
-<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite" border="0">
+<img class="logo" src="images/sqlite370_banner.svg" alt="SQLite" border="0">
 </a>
 <div><!-- IE hack to prevent disappearing logo --></div>
 <div class="tagline desktoponly">
@@ -120,11 +120,8 @@ antiRobotDefense();
 <div class="fancy_title">
 JSON Functions And Operators
 </div>
-<div class="fancy_toc">
-<a onclick="toggle_toc()">
-<span class="fancy_toc_mark" id="toc_mk">&#x25ba;</span>
-Table Of Contents
-</a>
+<details class="fancy_toc">
+<summary>Table Of Contents</summary>
 <div id="toc_sub"><div class="fancy-toc1"><a href="#overview">1. Overview</a></div>
 <div class="fancy-toc1"><a href="#compiling_in_json_support">2. Compiling in JSON Support</a></div>
 <div class="fancy-toc1"><a href="#interface_overview">3. Interface Overview</a></div>
@@ -164,20 +161,7 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#the_json_each_and_json_tree_table_valued_functions">4.23. The json_each() and json_tree() table-valued functions</a></div>
 <div class="fancy-toc3"><a href="#examples_using_json_each_and_json_tree_">4.23.1. Examples using json_each() and json_tree()</a></div>
 </div>
-</div>
-<script>
-function toggle_toc(){
-var sub = document.getElementById("toc_sub")
-var mk = document.getElementById("toc_mk")
-if( sub.style.display!="block" ){
-sub.style.display = "block";
-mk.innerHTML = "&#x25bc;";
-} else {
-sub.style.display = "none";
-mk.innerHTML = "&#x25ba;";
-}
-}
-</script>
+</details>
 </div>
 
 
@@ -376,7 +360,7 @@ can be a JSON object, array, number, string, or null.  SQLite numeric
 values and NULL values are interpreted as JSON numbers and nulls, respectively.
 SQLite text values can be understood as JSON objects, arrays, or strings.
 If an SQLite text value that is not a well-formed JSON object, array, or
-string is passed into JSON function, that function will usually throw
+string is passed into a JSON function, that function will usually throw
 an error.  (Exceptions to this rule are <a href="json1.html#jvalid">json_valid()</a>,
 <a href="json1.html#jquote">json_quote()</a>, and <a href="json1.html#jerr">json_error_position()</a>.)
 
@@ -658,7 +642,7 @@ for infinity and not-a-number.
 
 <p>
 Most JSON functions do their internal processing using JSONB.  So if the
-input is text, they first most translate the input text into JSONB.
+input is text, they first must translate the input text into JSONB.
 If the input is already in the JSONB format, no translation is needed,
 that step can be skipped, and performance is faster.
 
@@ -716,11 +700,19 @@ available in the <a href="cli.html">CLI</a>.  Readfile() was used to read JSON f
 but readfile() returns a BLOB.  And that worked for them, so why not just
 do it?)
 
-</p><p>For backwards compatibility,
+</p><p>For backwards bug-compatibility,
 the (formerly incorrect) legacy behavior of interpreting BLOBs as text JSON
 if no other interpretation works
-is hereby documented and is be officially supported in 
+is hereby documented and is officially supported in
 version 3.45.1 (2024-01-30) and all subsequent releases.
+Beware, however, that there exist BLOBs which are both valid JSONB and
+which are valid JSON after being cast to text.  For example, the
+BLOB <tt>x'33343535'</tt> is valid JSONB, specifically the integer 456,
+and when cast to text is the valid JSON integer literal 3456.  Therefore,
+if you have legacy databases in which you store JSON text as a BLOB
+and you want to continue using those database with SQLite 3.45.0 or later,
+you will do well to run an UPDATE on that legacy JSON text so that it
+is actually stored as TEXT and not as a BLOB.
 
 </p><h1 id="function_details"><span>4. </span>Function Details</h1>
 
@@ -992,7 +984,13 @@ the -> and ->> operators also accept a text object label or
 integer array index as their right-hand operand.
 If the right operand is a text
 label X, then it is interpreted as the JSON path '$.X'.  If the right
-operand is an integer value N, then it is interpreted as the JSON path '$[N]'.
+operand is an integer value N, then it is interpreted as the JSON path '$[N]'
+if it is non-negative.  Or if N is negative integer with value -K, then it
+is interpreted like the JSON path '$&#91;#-K&#93;'.  In other words, the
+indexing begins at the end of the array and moves back toward the front.
+Negative values for N are only supported in SQLite versions 3.47.0
+(2024-10-21) and later.
+
 
 </p><p>Examples:
 
@@ -1095,7 +1093,7 @@ if they look like valid JSON.
 well-formed or if any PATH argument is not well-formed or if any
 argument is a BLOB.
 
-</p><p>To append an element onto the end of an array, using json_insert()
+</p><p>To append an element onto the end of an array, use json_insert()
 with an array index of "#".  Examples:
 
 <ul>
@@ -1167,7 +1165,7 @@ If any argument to json_object() is a BLOB then an error is thrown.
 </p><p>The json_object() function currently allows duplicate labels without
 complaint, though this might change in a future enhancement.
 
-</p><p>An argument with SQL type TEXT it is normally converted into a quoted 
+</p><p>An argument with SQL type TEXT is normally converted into a quoted 
 JSON string even if the input text is well-formed JSON.  
 However, if the argument is the direct result from another JSON
 function or <a href="json1.html#jptr">the -> operator</a> (but not <a href="json1.html#jptr">the ->> operator</a>), 
@@ -1375,7 +1373,7 @@ JSON path.
 
 </p><h2 id="the_json_valid_function"><span>4.20. </span>The json_valid() function</h2>
 
-<p>The json_valid(X,Y) function return 1 if the argument X is well-formed
+<p>The json_valid(X,Y) function returns 1 if the argument X is well-formed
 JSON, or returns 0 if X is not well-formed.  The Y parameter is an integer
 bitmask that defines what is meant by "well-formed".  The following bits
 of Y are currently defined:
@@ -1415,7 +1413,7 @@ versions of SQLite, prior to the addition of support for
 
 </p><p>The difference between 0x04 and 0x08 bits in the Y parameter is that
 0x04 only examines the outer wrapper of the BLOB to see if it superficially
-looks like <a href="json1.html#jsonbx">JSONB</a>.  This is sufficient for must purposes and is very fast.
+looks like <a href="json1.html#jsonbx">JSONB</a>.  This is sufficient for most purposes and is very fast.
 The 0x08 bit does a thorough examination of all internal details of the BLOB.
 The 0x08 bit takes time that is linear in the size of the X input and is much
 slower.  The 0x04 bit is recommended for most purposes.
@@ -1635,5 +1633,5 @@ SELECT DISTINCT json_extract(big.json,'$.id')
  WHERE json_tree.key='uuid'
    AND json_tree.value='6fa5181e-5721-11e5-a04e-57f3d7b32808';
 </pre></blockquote>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/json1.in?m=d0ca839304">2024-07-25 15:06:57</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/json1.in?m=e738835ee5">2025-05-31 13:08:22</a> UTC </small></i></p>
 

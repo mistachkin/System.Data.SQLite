@@ -11,66 +11,66 @@
   <metadata>
     <id>System.Data.SQLite.Beta</id>
     <title>System.Data.SQLite (x86/x64) Beta</title>
-    <version>1.0.119.0</version>
+    <version>1.0.120.0</version>
     <authors>SQLite Development Team</authors>
-    <description>This is a &quot;beta&quot; package and is not intended for production use.  The official SQLite database engine for both x86 and x64 along with the ADO.NET provider.  This package includes support for LINQ and Entity Framework 6.</description>
+    <description>This is a &quot;beta&quot; package and is not intended for production use.  The SQLite database engine for both x86 and x64 along with the ADO.NET provider.  This package includes support for LINQ and Entity Framework 6.</description>
     <language>en-US</language>
-    <projectUrl>https://system.data.sqlite.org/</projectUrl>
-    <iconUrl>https://system.data.sqlite.org/images/sqlite128.png</iconUrl>
+    <projectUrl>https://www.mistachkin.com/</projectUrl>
+    <iconUrl>https://eagle.to/images/eagle128.png</iconUrl>
     <licenseUrl>https://www.sqlite.org/copyright.html</licenseUrl>
     <tags>sqlite database ado.net provider interop</tags>
-    <copyright>Public Domain</copyright>
+    <copyright>Copyright &#x00A9; 2007-2012 by Joe Mistachkin.  All rights reserved.</copyright>
     <dependencies>
       <group targetFramework="net20">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net40">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net45">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net451">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net46">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="netstandard2.0">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="netstandard2.1">
-        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Core.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net20">
-        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net40">
-        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net45">
-        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net451">
-        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net46">
-        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.Linq.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net40">
-        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net45">
-        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net451">
-        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="net46">
-        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
       <group targetFramework="netstandard2.1">
-        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.119.0]" />
+        <dependency id="System.Data.SQLite.EF6.Beta" version="[1.0.120.0,1.0.120.99999]" />
       </group>
     </dependencies>
   </metadata>

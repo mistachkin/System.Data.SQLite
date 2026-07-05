@@ -31,7 +31,7 @@ runSQLiteTestFilesPrologue
 #
 set version(major)             1
 set version(minor)             0
-set version(build)           119; # NOTE: Normally incremented per release.
+set version(build)           120; # NOTE: Normally incremented per release.
 set version(revision)          0
 
 ###############################################################################
@@ -41,9 +41,9 @@ set version(revision)          0
 #       must be kept synchronized with the version numbers for the associated
 #       source code and property files.
 #
-set version(core,full) 3.46.1.0
-set version(core,short) 3.46.1
-set version(core,tag) 3.46.1; # NOTE: May be "trunk" -OR- same as "short".
+set version(core,full) 3.50.3.0
+set version(core,short) 3.50.3
+set version(core,tag) 3.50.3; # NOTE: May be "trunk" -OR- same as "short".
 
 #
 # NOTE: What is the full URI for the included SQLite core library version?
@@ -77,12 +77,17 @@ set version(full) [appendArgs $version(major) . $version(minor) . \
 ###############################################################################
 
 #
-# NOTE: Build the version number regular expression used for the NuGet
-#       packages.  This should be the same as the above version number,
-#       with the exception of the revision, which may differ.
+# NOTE: Build the version number regular expressions used for the NuGet
+#       packages.  These should be the same as the above version number,
+#       with the exception of the revisions, which may differ.
 #
-set version(nuget) [appendArgs $version(major) \\. $version(minor) \\. \
-                               $version(build) \\. \\d+]
+set version(nugetOne) [appendArgs $version(major) \\. $version(minor) \\. \
+                                  $version(build) \\. \\d+]
+
+set version(nugetRange) [appendArgs $version(major) \\. $version(minor) \\. \
+                                    $version(build) \\.0, \
+                                    $version(major) \\. $version(minor) \\. \
+                                    $version(build) \\.99999]
 
 ###############################################################################
 
@@ -308,200 +313,200 @@ lappend patterns \
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Core\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net20\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "]
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.Beta.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "]
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.Core.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetFramework\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "] \
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetFramework\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "] \
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetFramework\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "] \
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetFramework\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "] \
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetFramework\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "] \
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetStandard\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "] \
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"Stub\\.System\\.Data\\.SQLite\\.Core\\.NetStandard\" " \
-        "version=\"\\\[" $version(nuget) "\\\]\" "]
+        "version=\"\\\[" $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.Core.Beta.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Core.Test.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Core.MSIL.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Core.MSIL.Beta.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Core.MSIL.Test.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Core.NetFramework.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Core.NetStandard.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.EF6.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"EntityFramework\" version=\"" [string map [list . \\.] \
         $version(ef6)] "\" "] \
@@ -523,7 +528,7 @@ lappend patterns \
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"EntityFramework\" version=\"" [string map [list . \\.] \
         $version(ef6)] "\" "] \
@@ -545,7 +550,7 @@ lappend patterns \
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"EntityFramework\" version=\"" [string map [list . \\.] \
         $version(ef6)] "\" "] \
@@ -567,324 +572,324 @@ lappend patterns \
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Linq.Beta.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.Linq.Test.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>]
+    [appendArgs <version> $version(nugetOne) </version>]
 
 ###############################################################################
 # SQLite.MSIL.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net20\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "]
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.MSIL.Beta.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Beta\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "]
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.MSIL.Test.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.MSIL\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "]
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.Test.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Core\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net20\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.Linq\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.0\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "] \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"netstandard2\\.1\".*? " \
         "id=\"System\\.Data\\.SQLite\\.EF6\\.Test\" version=\"\\\[" \
-        $version(nuget) "\\\]\" "]
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.x64.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "]
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.x86.nuspec
 ###############################################################################
 
 lappend patterns \
-    [appendArgs <version> $version(nuget) </version>] \
+    [appendArgs <version> $version(nugetOne) </version>] \
     [appendArgs " targetFramework=\"net20\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.Linq\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net40\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net45\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net451\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "] \
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "] \
     [appendArgs " targetFramework=\"net46\".*? " \
-        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" $version(nuget) \
-        "\\\]\" "]
+        "id=\"System\\.Data\\.SQLite\\.EF6\" version=\"\\\[" \
+        $version(nugetRange) "\\\]\" "]
 
 ###############################################################################
 # SQLite.Designer/AssemblyInfo.cs

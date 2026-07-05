@@ -258,10 +258,6 @@ set sds_manifests(source) {
   Setup/release_static.bat
   Setup/run-mono-tests-debug.sh
   Setup/run-mono-tests-release.sh
-  Setup/run-net5-tests-debug.sh
-  Setup/run-net5-tests-release.sh
-  Setup/run-net6-tests-debug.sh
-  Setup/run-net6-tests-release.sh
   Setup/run-netcore20-tests-debug.sh
   Setup/run-netcore20-tests-release.sh
   Setup/run-netcore30-tests-debug.sh
@@ -399,8 +395,6 @@ set sds_manifests(source) {
   Setup/test.bat
   Setup/test_all.bat
   Setup/test_ce_200x.bat
-  Setup/test_net_5.bat
-  Setup/test_net_6.bat
   Setup/test_net_core_20.bat
   Setup/test_net_core_30.bat
   Setup/test_vs_2022.bat
@@ -986,14 +980,6 @@ set sds_manifests(source) {
 #       suite.
 #
 set sds_manifests(eagle) {
-  Externals/Eagle/bin/net5/
-  Externals/Eagle/bin/net5/Eagle.dll
-  Externals/Eagle/bin/net5/EagleShell.dll
-  Externals/Eagle/bin/net5/EagleShell.runtimeconfig.json
-  Externals/Eagle/bin/net6/
-  Externals/Eagle/bin/net6/Eagle.dll
-  Externals/Eagle/bin/net6/EagleShell.dll
-  Externals/Eagle/bin/net6/EagleShell.runtimeconfig.json
   Externals/Eagle/bin/netCore20/
   Externals/Eagle/bin/netCore20/Eagle.dll
   Externals/Eagle/bin/netCore20/EagleShell.dll
@@ -1460,6 +1446,15 @@ set sds_manifests(nuGetMetadata) {
   _rels/.rels
   [Content_Types].xml
   package/services/metadata/core-properties/${md5}.psmdcp
+}
+
+###############################################################################
+#
+# NOTE: This is the list of all NuGet metadata files that should be present in
+#       all signed NuGet packages.
+#
+set sds_manifests(nuGetSignedMetadata) {
+  .signature.p7s
 }
 
 ###############################################################################
@@ -2455,13 +2450,30 @@ set manifests(System.Data.SQLite..nupkg) [list sds \
 
 ###############################################################################
 
+set manifests(System.Data.SQLite..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetPrimary]
+
+###############################################################################
+
 set manifests(System.Data.SQLite.Core..nupkg) [list sds \
     nuGetMetadata nuGetCore]
 
 ###############################################################################
 
+set manifests(System.Data.SQLite.Core..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetCore]
+
+###############################################################################
+
 set manifests(System.Data.SQLite.Core.MSIL..nupkg) [list sds \
     nuGetMetadata nuGetCoreNetFrameworkManagedOnly \
+    nuGetCoreNetFrameworkManagedOnly nuGetCoreNetStandardManagedOnly \
+    nuGetCoreMsil]
+
+###############################################################################
+
+set manifests(System.Data.SQLite.Core.MSIL..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetCoreNetFrameworkManagedOnly \
     nuGetCoreNetFrameworkManagedOnly nuGetCoreNetStandardManagedOnly \
     nuGetCoreMsil]
 
@@ -2473,8 +2485,20 @@ set manifests(Stub.System.Data.SQLite.Core.NetFramework..nupkg) [list sds \
 
 ###############################################################################
 
+set manifests(Stub.System.Data.SQLite.Core.NetFramework..signed.nupkg) [list \
+    sds nuGetMetadata nuGetSignedMetadata nuGetCoreNetFrameworkManagedOnly \
+    nuGetCoreNetFrameworkNativeOnly nuGetCoreNetFramework]
+
+###############################################################################
+
 set manifests(Stub.System.Data.SQLite.Core.NetStandard..nupkg) [list sds \
     nuGetMetadata nuGetCoreNetStandardManagedOnly \
+    nuGetCoreNetStandardNativeOnly nuGetCoreNetStandard]
+
+###############################################################################
+
+set manifests(Stub.System.Data.SQLite.Core.NetStandard..signed.nupkg) [list \
+    sds nuGetMetadata nuGetSignedMetadata nuGetCoreNetStandardManagedOnly \
     nuGetCoreNetStandardNativeOnly nuGetCoreNetStandard]
 
 ###############################################################################
@@ -2484,8 +2508,18 @@ set manifests(System.Data.SQLite.EF6..nupkg) [list sds \
 
 ###############################################################################
 
+set manifests(System.Data.SQLite.EF6..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetEf6]
+
+###############################################################################
+
 set manifests(System.Data.SQLite.Linq..nupkg) [list sds \
     nuGetMetadata nuGetLinq]
+
+###############################################################################
+
+set manifests(System.Data.SQLite.Linq..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetLinq]
 
 ###############################################################################
 
@@ -2494,13 +2528,30 @@ set manifests(System.Data.SQLite.MSIL..nupkg) [list sds \
 
 ###############################################################################
 
+set manifests(System.Data.SQLite.MSIL..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetMsil]
+
+###############################################################################
+
 set manifests(System.Data.SQLite.x64..nupkg) [list sds \
     nuGetMetadata nuGetCoreNetFrameworkManagedOnly nuGetX64]
 
 ###############################################################################
 
+set manifests(System.Data.SQLite.x64..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetCoreNetFrameworkManagedOnly \
+    nuGetX64]
+
+###############################################################################
+
 set manifests(System.Data.SQLite.x86..nupkg) [list sds \
     nuGetMetadata nuGetCoreNetFrameworkManagedOnly nuGetX86]
+
+###############################################################################
+
+set manifests(System.Data.SQLite.x86..signed.nupkg) [list sds \
+    nuGetMetadata nuGetSignedMetadata nuGetCoreNetFrameworkManagedOnly \
+    nuGetX86]
 
 ###############################################################################
 # end of file

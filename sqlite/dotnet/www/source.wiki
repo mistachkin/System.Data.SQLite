@@ -60,7 +60,7 @@
     including the entire check-in history:
     <br />
     <br />
-    <b>fossil [https://www.fossil-scm.org/index.html/help/clone | clone] https://system.data.sqlite.org/ &lt;repositories&gt;/sds.fossil</b>
+    <b>fossil [https://www.fossil-scm.org/index.html/help/clone | clone] https://urn.to/r/sds &lt;repositories&gt;/sds.fossil</b>
   </li>
 
   <li>

@@ -75,9 +75,12 @@ Corrupt_Vtab 267
 Done 101
 Empty 16
 Error 1
+Error_Key 1281
 Error_Missing_CollSeq 257
+Error_ReserveSize 1025
 Error_Retry 513
 Error_Snapshot 769
+Error_Unable 1537
 Format 24
 Full 13
 Internal 2
@@ -85,10 +88,12 @@ Interrupt 9
 IoErr 10
 IoErr_Access 3338
 IoErr_Auth 7178
+IoErr_BadKey 8970
 IoErr_Begin_Atomic 7434
 IoErr_Blocked 2826
 IoErr_CheckReservedLock 3594
 IoErr_Close 4106
+IoErr_Codec 9226
 IoErr_Commit_Atomic 7690
 IoErr_ConvPath 6666
 IoErr_CorruptFs 8458

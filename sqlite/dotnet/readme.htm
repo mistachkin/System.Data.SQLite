@@ -5,14 +5,14 @@
 </head>
 <body>
 ADO.NET SQLite Data Provider<br />
-Version 1.0.119.0 - September 29, 2024<br />
-Using <a href="https://www.sqlite.org/releaselog/3_46_1.html">SQLite 3.46.1</a><br />Originally written by Robert Simpson<br />
+Version 1.0.120.0 - March XX, 2025 <font color="red">(release scheduled)</font><br />
+Using <a href="https://www.sqlite.org/releaselog/3_50_3.html">SQLite 3.50.3</a><br />Originally written by Robert Simpson<br />
 Released to the public domain, use at your own risk!<br />
-Official provider website:&nbsp;<a href="https://system.data.sqlite.org/">https://system.data.sqlite.org/</a><br />
+Current provider website:&nbsp;<a href="https://urn.to/r/sds">https://urn.to/r/sds</a><br />
 Legacy versions:&nbsp;<a href="https://sourceforge.net/projects/sqlite-dotnet2/">https://sourceforge.net/projects/sqlite-dotnet2/</a><br />
 <br />
-The current development version can be downloaded from <a href="https://system.data.sqlite.org/index.html/timeline?y=ci">
-https://system.data.sqlite.org/index.html/timeline?y=ci</a>
+The current development version can be downloaded from <a href="https://urn.to/r/sds">
+https://urn.to/r/sds</a>
 <br />
 <br />
 
@@ -145,7 +145,7 @@ app.config file:<br />
         &lt;DbProviderFactories&gt;
             &lt;remove invariant="System.Data.SQLite" /&gt;
             &lt;add name="SQLite Data Provider" invariant="System.Data.SQLite" description=".NET Framework Data Provider for SQLite"
-                 type="System.Data.SQLite.SQLiteFactory, System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139" /&gt;
+                 type="System.Data.SQLite.SQLiteFactory, System.Data.SQLite, Version=1.0.120.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139" /&gt;
         &lt;/DbProviderFactories&gt;
     &lt;/system.data&gt;
 &lt;/configuration&gt;
@@ -183,7 +183,7 @@ the associated <a href="https://support.microsoft.com/kb/2019667">Microsoft
 Visual C++ Runtime Library</a> to be installed on the target machine.  For
 further details on distributing and/or deploying System.Data.SQLite, please
 refer to the
-<a href="https://system.data.sqlite.org/index.html/doc/trunk/www/downloads.wiki">System.Data.SQLite Downloads</a>
+<a href="https://urn.to/r/sds">System.Data.SQLite</a> Downloads
 web page.
 </p>
 
@@ -208,7 +208,15 @@ released versions of System.Data.SQLite.
 <h2><b>Version History</b></h2>
 
 <p>
-    <b>1.0.119.0 - September 29, 2024</b>
+    <b>1.0.120.0 - March XX, 2025 <font color="red">(release scheduled)</font></b>
+</p>
+<ul>
+    <li>Updated to <a href="https://www.sqlite.org/releaselog/3_50_3.html">SQLite 3.50.3</a>.</li>
+    <li>Add the DisposedCommand, FinalizingCommand, FinalizedCommand, DisposedDataReader, FinalizingDataReader, and FinalizedDataReader types for the OnChanged event.</li>
+    <li>Add experimental support for the 'Binary' DateTime format.</li>
+</ul>
+<p>
+    <b>1.0.120.0 - September 29, 2024</b>
 </p>
 <ul>
     <li>Updated to <a href="https://www.sqlite.org/releaselog/3_46_1.html">SQLite 3.46.1</a>.</li>
@@ -416,7 +424,7 @@ released versions of System.Data.SQLite.
 </p>
 <ul>
     <li>Updated to <a href="https://www.sqlite.org/releaselog/3_15_2.html">SQLite 3.15.2</a>.</li>
-    <li>Add the &quot;%PreLoadSQLite_AssemblyDirectory%&quot;, &quot;%PreLoadSQLite_TargetFramework%&quot;, and &quot;%PreLoadSQLite_XmlConfigDirectory%&quot; <a href="https://system.data.sqlite.org/index.html/artifact?ci=trunk&filename=Doc/Extra/Provider/environment.html">replacement tokens</a> for use in configuration setting values. Pursuant to [d4728aecb7].</li>
+    <li>Add the &quot;%PreLoadSQLite_AssemblyDirectory%&quot;, &quot;%PreLoadSQLite_TargetFramework%&quot;, and &quot;%PreLoadSQLite_XmlConfigDirectory%&quot; <a href="https://urn.to/r/sds/artifact?ci=trunk&filename=Doc/Extra/Provider/environment.html">replacement tokens</a> for use in configuration setting values. Pursuant to [d4728aecb7].</li>
     <li>Prevent the GetByte, GetChar, and GetInt16 methods of the SQLiteDataReader class from throwing exceptions for large integer values. Pursuant to [5535448538].&nbsp;<b>** Potentially Incompatible Change **</b></li>
     <li>Use <a href="https://www.sqlite.org/lang_savepoint.html">SAVEPOINTs</a> to properly implement nested transactions when the new AllowNestedTransactions connection flag is used. Pursuant to [1f7bfff467].</li>
     <li>When converting a Julian Day value to an integer, round to the nearest millisecond first. Pursuant to [69cf6e5dc8].&nbsp;<b>** Potentially Incompatible Change **</b></li>

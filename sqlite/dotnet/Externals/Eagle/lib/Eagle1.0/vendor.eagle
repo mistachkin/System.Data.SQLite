@@ -202,8 +202,16 @@ namespace eval ::Eagle {
     #
     if {![interp issafe] && [isWindows]} then {
       set no(deleteSqliteImplicitNativeFiles) 1
+      set no(deleteSqliteNonImplicitFiles) 1
       set no(copySqliteImplicitNativeFiles) 1
     }
+
+    #
+    # HACK: Force allowing later major versions of .NET (Core?) runtime in
+    #       all contexts where it could matter.
+    #
+    set getRuntimeCommandLine(dotNetCoreExecArgs) [list --roll-forward Major]
+    set compileCSharp(dotNetCoreExecArgs) [list --roll-forward Major]
   }
 }
 

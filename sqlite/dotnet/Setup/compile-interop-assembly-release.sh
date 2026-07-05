@@ -7,7 +7,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   libname=libSQLite.Interop.dylib
   # NOTE: No longer works in 10.14+
   # gccflags="-arch i386 -arch x86_64"
-  gccflags="-arch x86_64"
+  if [[ -z "$SQLITE_NET_ARCH" ]]; then
+    gccflags="-arch x86_64"
+  else
+    gccflags="-arch $SQLITE_NET_ARCH"
+  fi
 else
   libname=libSQLite.Interop.so
   gccflags=""

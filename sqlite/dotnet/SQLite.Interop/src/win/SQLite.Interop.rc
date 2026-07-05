@@ -52,7 +52,7 @@ BEGIN
             VALUE "FileDescription", "System.Data.SQLite Interop Assembly"
             VALUE "FileVersion", INTEROP_VERSION
             VALUE "InternalName", "SQLite.Interop"
-            VALUE "LegalCopyright", "Public Domain"
+            VALUE "LegalCopyright", "Copyright \xA9 2007-2012 by Joe Mistachkin.  All rights reserved."
             VALUE "OriginalFilename", "SQLite.Interop.dll"
             VALUE "ProductName", "System.Data.SQLite"
             VALUE "ProductVersion", INTEROP_VERSION

@@ -484,6 +484,107 @@ SQLITE_API int WINAPI sqlite3_unconfig_log_interop()
 }
 #endif
 
+/*
+** The following functions are non-varargs wrappers around SQLite APIs
+** that use C variadic arguments (i.e. "...").  P/Invoking a true C
+** varargs function from managed code is problematic because the ABI
+** for varargs functions can differ from non-varargs functions on some
+** platforms (e.g. the x86-64 System V ABI uses the AL register to
+** indicate the number of vector arguments, and ARM64 has different
+** stack layout rules for varargs).  By providing non-varargs wrappers
+** with fixed parameter lists, managed code can safely call these
+** functions regardless of platform.
+*/
+
+/*
+** Non-varargs wrapper for sqlite3_config() with no extra arguments.
+*/
+SQLITE_API int WINAPI sqlite3_config_none_interop(int op)
+{
+  return sqlite3_config(op);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_config() with a single int argument.
+*/
+SQLITE_API int WINAPI sqlite3_config_int_interop(int op, int value)
+{
+  return sqlite3_config(op, value);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_config() with a log callback and
+** user data pointer (e.g. SQLITE_CONFIG_LOG).
+*/
+SQLITE_API int WINAPI sqlite3_config_log_callback_interop(
+  int op,
+  void (*xLog)(void*,int,const char*),
+  void *pArg)
+{
+  return sqlite3_config(op, xLog, pArg);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_db_config() with a single string
+** argument (e.g. SQLITE_DBCONFIG_MAINDBNAME).
+*/
+SQLITE_API int WINAPI sqlite3_db_config_charptr_interop(
+  sqlite3 *db,
+  int op,
+  const char *zValue)
+{
+  return sqlite3_db_config(db, op, zValue);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_db_config() with an int value and
+** an int* result (e.g. SQLITE_DBCONFIG_ENABLE_FKEY).
+*/
+SQLITE_API int WINAPI sqlite3_db_config_int_refint_interop(
+  sqlite3 *db,
+  int op,
+  int value,
+  int *pResult)
+{
+  return sqlite3_db_config(db, op, value, pResult);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_db_config() with a pointer and two
+** int arguments (e.g. SQLITE_DBCONFIG_LOOKASIDE).
+*/
+SQLITE_API int WINAPI sqlite3_db_config_intptr_two_ints_interop(
+  sqlite3 *db,
+  int op,
+  void *pValue,
+  int int0,
+  int int1)
+{
+  return sqlite3_db_config(db, op, pValue, int0, int1);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_log().  The zMessage parameter is
+** passed using "%s" to prevent it from being interpreted as a printf
+** format string, which would be unsafe if the message contained '%'
+** characters.
+*/
+SQLITE_API void WINAPI sqlite3_log_interop(int iErrCode, const char *zMessage)
+{
+  sqlite3_log(iErrCode, "%s", zMessage);
+}
+
+/*
+** Non-varargs wrapper for sqlite3_mprintf() with no format arguments
+** beyond the format string itself.  The zFormat parameter is passed
+** using "%s" to prevent format string interpretation.  This wrapper
+** only handles the no-extra-arguments case.
+*/
+SQLITE_API char * WINAPI sqlite3_mprintf_interop(const char *zFormat)
+{
+  return sqlite3_mprintf("%s", zFormat);
+}
+
 SQLITE_API const char *WINAPI interop_libversion(void)
 {
   return INTEROP_VERSION;

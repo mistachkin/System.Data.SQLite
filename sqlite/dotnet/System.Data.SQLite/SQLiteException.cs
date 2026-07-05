@@ -671,6 +671,18 @@ namespace System.Data.SQLite
       /// </summary>
       Error_Snapshot = (Error | (3 << 8)),
       /// <summary>
+      /// TBD.
+      /// </summary>
+      Error_ReserveSize = (Error | (4 << 8)),
+      /// <summary>
+      /// TBD.
+      /// </summary>
+      Error_Key = (Error | (5 << 8)),
+      /// <summary>
+      /// TBD.
+      /// </summary>
+      Error_Unable = (Error | (6 << 8)),
+      /// <summary>
       /// A file read operation failed.
       /// </summary>
       IoErr_Read = (IoErr | (1 << 8)),
@@ -807,6 +819,14 @@ namespace System.Data.SQLite
       /// In general, this applies only to the WAL journal mode.
       /// </summary>
       IoErr_In_Page = (IoErr | (34 << 8)),
+      /// <summary>
+      /// TBD.
+      /// </summary>
+      IoErr_BadKey = (IoErr | (35 << 8)),
+      /// <summary>
+      /// TBD.
+      /// </summary>
+      IoErr_Codec = (IoErr | (36 << 8)),
       /// <summary>
       /// A database table is locked in shared-cache mode.
       /// </summary>

@@ -1358,7 +1358,7 @@ runTest {test session-1.9 {apply change set (remote stream)} -setup {
   set webClient [object create -alias System.Net.WebClient]
 
   set stream [$webClient -alias OpenRead \
-      https://system.data.sqlite.org/tests/session-1.9.bin]
+      https://urn.to/r/session19bin]
 
   set changeSet [$connection -alias CreateChangeSet $stream null]
 

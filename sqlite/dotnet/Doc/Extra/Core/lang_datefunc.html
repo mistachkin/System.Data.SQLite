@@ -9,7 +9,7 @@
 <body>
 <div class=nosearch>
 <a href="index.html">
-<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite" border="0">
+<img class="logo" src="images/sqlite370_banner.svg" alt="SQLite" border="0">
 </a>
 <div><!-- IE hack to prevent disappearing logo --></div>
 <div class="tagline desktoponly">
@@ -120,31 +120,15 @@ antiRobotDefense();
 <div class="fancy_title">
 Date And Time Functions
 </div>
-<div class="fancy_toc">
-<a onclick="toggle_toc()">
-<span class="fancy_toc_mark" id="toc_mk">&#x25ba;</span>
-Table Of Contents
-</a>
+<details class="fancy_toc">
+<summary>Table Of Contents</summary>
 <div id="toc_sub"><div class="fancy-toc1"><a href="#overview">1. Overview</a></div>
 <div class="fancy-toc1"><a href="#time_values">2. Time Values</a></div>
 <div class="fancy-toc1"><a href="#modifiers">3. Modifiers</a></div>
 <div class="fancy-toc1"><a href="#examples">4. Examples</a></div>
 <div class="fancy-toc1"><a href="#caveats_and_bugs">5. Caveats And Bugs</a></div>
 </div>
-</div>
-<script>
-function toggle_toc(){
-var sub = document.getElementById("toc_sub")
-var mk = document.getElementById("toc_mk")
-if( sub.style.display!="block" ){
-sub.style.display = "block";
-mk.innerHTML = "&#x25bc;";
-} else {
-sub.style.display = "none";
-mk.innerHTML = "&#x25ba;";
-}
-}
-</script>
+</details>
 </div>
 
 
@@ -176,16 +160,17 @@ The timediff() function takes exactly two arguments which are both <a href="lang
 
 <p>
 SQLite does not have a dedicated date/time datatype.  Instead,
-date and time values can stored as any of the following:
+date and time values can be stored as any of the following:
 
 </p><p></p><blockquote>
 <table border="0" cellspacing="0" cellpadding="0">
 <tr>
 <td><a href="http://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a>
-</td><td>A text string that is an ISO 8601 date/time value.
+</td><td>A text string that is one of the ISO 8601 date/time values
+shown in <a href="#tmval">items 1 through 10 below</a>.
 Example: <tt>'2025-05-29 14:16:00'</tt>
 </td></tr><tr>
-<td><a href="http://en.wikipedia.org/wiki/Julian_day">Julian day number</a>
+<td><a href="http://en.wikipedia.org/wiki/Julian_day">Julian&nbsp;day&nbsp;number</a>
 </td><td>The number of days including fractional days since -4713-11-24 12:00:00
 Example: <tt>2460825.09444444</tt>
 </td></tr><tr>
@@ -199,7 +184,7 @@ Example: <tt>1748528160</tt>
 These three formats are collectively known as <a href="lang_datefunc.html#tmval">time-values</a>.
 All of the date time functions accept time-values as either ISO-8601 text or
 as Julian day numbers.  They can also be made to accept unix timestamps by
-adding optional modifiers arguments <a href="lang_datefunc.html#automod">'auto'</a> or
+adding optional modifier arguments <a href="lang_datefunc.html#automod">'auto'</a> or
 <a href="lang_datefunc.html#jdmod">'unixepoch'</a>.
 Since the timediff() function does not accept modifiers,
 it can only use ISO-8601 and julian day number time-values.
@@ -430,6 +415,11 @@ represent the Julian day number.
 </p>
 
 <p>
+<a href="http://www.w3c.org/TR/NOTE-datetime">ISO-8601</a> supports a wide variety of
+alternative date/time formats, but SQLite only supports the ones specifically
+enumerated above.
+
+</p><p>
 In all functions other than timediff(),
 the time-value (and all modifiers) may be omitted, in which case a time
 value of 'now' is assumed.
@@ -543,7 +533,7 @@ a NULL to be returned if any other time-value format is used.
 
 </p><p>The "<b>auto</b>" modifier must immediately follow the initial time-value.
 If the time-value is numeric (the DDDDDDDDDD format) then the 'auto'
-modifier causes the time-value to interpreted as either a julian day
+modifier causes the time-value to be interpreted as either a julian day
 number or a unix timestamp, depending on its magnitude.  If the value
 is between 0.0 and 5373484.499999, then it is interpreted as a julian
 day number (corresponding to dates between
@@ -702,5 +692,5 @@ getting results correct back to 1986, when the rules were also changed.</p>
 <a href="http://en.wikipedia.org/wiki/Gregorian_calendar">Gregorian calendar</a>
 system.  They also assume that every
 day is exactly 86400 seconds in duration; no leap seconds are incorporated.</p>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lang_datefunc.in?m=ab33c4f78f">2024-08-14 17:04:32</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lang_datefunc.in?m=7155567f7c">2025-05-31 13:08:22</a> UTC </small></i></p>
 

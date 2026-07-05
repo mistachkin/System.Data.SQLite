@@ -55,7 +55,15 @@
 <div align="center"><h2><b>Version History</b></h2></div>
 
 <p>
-    <b>1.0.119.0 - September 29, 2024</b>
+    <b>1.0.120.0 - March XX, 2025 <font color="red">(release scheduled)</font></b>
+</p>
+<ul>
+    <li>Updated to [https://www.sqlite.org/releaselog/3_50_3.html|SQLite 3.50.3].</li>
+    <li>Add the DisposedCommand, FinalizingCommand, FinalizedCommand, DisposedDataReader, FinalizingDataReader, and FinalizedDataReader types for the OnChanged event.</li>
+    <li>Add experimental support for the 'Binary' DateTime format.</li>
+</ul>
+<p>
+    <b>1.0.120.0 - September 29, 2024</b>
 </p>
 <ul>
     <li>Updated to [https://www.sqlite.org/releaselog/3_46_1.html|SQLite 3.46.1].</li>
@@ -263,7 +271,7 @@
 </p>
 <ul>
     <li>Updated to [https://www.sqlite.org/releaselog/3_15_2.html|SQLite 3.15.2].</li>
-    <li>Add the &quot;%PreLoadSQLite_AssemblyDirectory%&quot;, &quot;%PreLoadSQLite_TargetFramework%&quot;, and &quot;%PreLoadSQLite_XmlConfigDirectory%&quot; [https://system.data.sqlite.org/index.html/artifact?ci=trunk&filename=Doc/Extra/Provider/environment.html|replacement tokens] for use in configuration setting values. Pursuant to [d4728aecb7].</li>
+    <li>Add the &quot;%PreLoadSQLite_AssemblyDirectory%&quot;, &quot;%PreLoadSQLite_TargetFramework%&quot;, and &quot;%PreLoadSQLite_XmlConfigDirectory%&quot; [https://urn.to/r/sds/artifact?ci=trunk&filename=Doc/Extra/Provider/environment.html|replacement tokens] for use in configuration setting values. Pursuant to [d4728aecb7].</li>
     <li>Prevent the GetByte, GetChar, and GetInt16 methods of the SQLiteDataReader class from throwing exceptions for large integer values. Pursuant to [5535448538].&nbsp;<b>** Potentially Incompatible Change **</b></li>
     <li>Use [https://www.sqlite.org/lang_savepoint.html|SAVEPOINTs] to properly implement nested transactions when the new AllowNestedTransactions connection flag is used. Pursuant to [1f7bfff467].</li>
     <li>When converting a Julian Day value to an integer, round to the nearest millisecond first. Pursuant to [69cf6e5dc8].&nbsp;<b>** Potentially Incompatible Change **</b></li>
